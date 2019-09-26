@@ -1,0 +1,67 @@
+@startuml
+
+/'CPU'/
+
+class CPU {
+
+}
+
+/'Memory'/
+
+class Memory{
+
+}
+
+Memory <|-- LPM
+Memory <|-- DRAM
+
+class LPM{
+
+}
+
+class DRAM{
+
+}
+
+
+/'Policy'/
+
+class Policy{
+
+}
+
+Policy <|-- p_DRAM
+Policy <|-- p_DVS_DRAM
+Policy <|-- p_DVS_HM
+Policy <|-- p_HM
+
+class p_DRAM{
+
+}
+
+class p_HM{
+
+}
+
+class p_DVS_DRAM{
+
+}
+
+class p_DVS_HM{
+
+}
+
+/'Task'/
+
+class Task{
+
+}
+
+/'Simulator'/
+
+class Simulator{
+
+}
+
+
+@enduml
