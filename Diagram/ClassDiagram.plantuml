@@ -1,0 +1,121 @@
+@startuml
+
+/'Simulator'/
+
+class Simulator{
+    +{field} cur_simtime: int
+    +{field} end_simtime: int
+
+    +{method} load_setting(): bool
+    +{method} load_tasks(): bool 
+    +{method} print_result(): void
+}
+
+Simulator --> System
+
+/'<System>
+하나의 임베디드 시스템을 의미합니다.
+시스템은 CPU와 메모리 등으로 구성됩니다.
+'/
+
+class System <<Abstract>>
+class System{
+    +{field} name: String
+
+    +{method} assign_task(Task): bool
+}
+
+System o--- CPU
+System o--- Memory
+System o--- Queue
+System <|-- Sys_DRAM
+System <|-- Sys_DVS_DRAM
+System <|-- Sys_DVS_HM
+System <|-- Sys_HM
+
+class Sys_DRAM{
+
+}
+
+class Sys_HM{
+
+}
+
+class Sys_DVS_DRAM{
+
+}
+
+class Sys_DVS_HM{
+
+}
+
+
+/'<CPU>
+CPU는 프로세서이며 System의 구성요소입니다.
+CPU는 하나입니다. (싱글코어 환경이므로)
+'/
+
+class CPU <<Abstract>>
+class CPU {
+    -{field} power_active: int
+    -{field} power_idle: int
+    
+    -{method} cal_power(Task): int 
+
+}
+
+CPU <|-- DVS_CPU
+
+class DVS_CPU{
+    +{field} 
+}
+
+/'<Memory>
+Memory는 System의 구성요소입니다.
+System은 한 개 혹은 여러개의 메모리를 가집니다.'/
+
+class Memory <<Abstract>>
+class Memory{
+    -{field} capacity: int
+    -{field} power_active: double
+    -{field} power_idle: double
+
+    -{method} cal_power(Task): int
+}
+
+Memory <|-- LPM
+Memory <|-- DRAM
+
+class LPM{
+
+}
+
+class DRAM{
+
+}
+
+/'Queue'/
+class Queue{
+    +{field} length: int
+    
+    +{method} pop(): Task
+    +{method} insert(Task): void
+    +{method} requeue(): void
+}
+
+Queue o-- Task
+
+/'Task'/
+
+class Task{
+    +{static}{field} count: int
+    +{field} no: int
+    +{field} wcet: int
+    +{field} period: int
+    +{field} memreq: int
+    +{field} assign_execution_time: int
+    +{field} assign_execution_time_remain: int
+
+}
+
+@enduml
