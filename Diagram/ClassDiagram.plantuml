@@ -8,6 +8,7 @@ class Simulator{
 
     +{method} load_setting(): bool
     +{method} load_tasks(): bool 
+    +{method} start_sim(): void
     +{method} print_result(): void
 }
 
@@ -20,9 +21,11 @@ Simulator --> System
 
 class System <<Abstract>>
 class System{
-    +{field} name: String
+    +{field}{abstract} name: String
 
-    +{method} assign_task(Task): bool
+    +{method}{abstract} assign_task(Task): bool
+    +{method}{abstract} assign_memory(Task): bool
+    +{method}{abstract} assign_cpu(Task): bool
 }
 
 System o--- CPU
@@ -57,17 +60,24 @@ CPU는 하나입니다. (싱글코어 환경이므로)
 
 class CPU <<Abstract>>
 class CPU {
-    -{field} power_active: int
-    -{field} power_idle: int
-    
-    -{method} cal_power(Task): int 
+    +{method}{abstract} cal_power_active(Task): double 
+    +{method}{abstract} cal_power_idle(int): double
+    +{method}{abstract} assign_cpu(Task): bool
+} 
 
-}
-
+CPU <|-- nonDVS_CPU
 CPU <|-- DVS_CPU
 
 class DVS_CPU{
-    +{field} 
+    +{field} n_cpufreq: int
+    +{field} cpufreq: double[]
+    +{field} power_active: double[]
+    +{field} power_idle: double[]
+}
+
+class nonDVS_CPU{
+    +{field} power_active: double
+    +{field} power_idle: double
 }
 
 /'<Memory>
@@ -76,11 +86,15 @@ System은 한 개 혹은 여러개의 메모리를 가집니다.'/
 
 class Memory <<Abstract>>
 class Memory{
-    -{field} capacity: int
-    -{field} power_active: double
-    -{field} power_idle: double
+    +{field} capacity: int
+    +{field} capacity_remain: int
+    +{field} power_active: double
+    +{field} power_idle: double
+    +{field} task_scale: double
 
-    -{method} cal_power(Task): int
+    +{method} cal_power_active(Task): double
+    +{method} cal_power_idle(int): double
+    +{method}{abstract} assign_memory(Task): bool
 }
 
 Memory <|-- LPM
