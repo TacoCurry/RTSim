@@ -12,7 +12,7 @@ class Simulator{
     +{method} print_result(): void
 }
 
-Simulator --> System
+Simulator -> System
 
 /'<System>
 하나의 임베디드 시스템을 의미합니다.
