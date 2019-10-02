@@ -24,7 +24,7 @@ class Memory:
         return False
 
     @staticmethod
-    def insert_memory(self, memory_type, capacity, wcet_scale, power_active, power_idle):
+    def insert_memory(memory_type, capacity, wcet_scale, power_active, power_idle):
         Memory.memories.append(
             Memory(memory_type, capacity, wcet_scale, power_active, power_idle))
         Memory.total_capacity += capacity
