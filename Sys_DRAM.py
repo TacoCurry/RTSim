@@ -1,15 +1,15 @@
 import System;
 import Memory;
-
+import Task;
 class Dram(System.system):
 
-    name= "dram"
-    desc="No DVS with dram"
-    def assign_task(self, system_task):
-        system_task.idx_cpufreq=1
-        return Memory.assgign_mem(system_task, 2)
+    System.system.name= "dram"
+    System.system.desc="No DVS with dram"
+    def assign_task(self, task: Task.Task):
+        Task.Task.idx_cpufreq=1
+        return Memory.Memory.assign_memory(task, Memory.Memory.TYPE_DRAM)
 
-    def reassign_task(self,system_task):
+    def reassign_task(self,task: Task.Task):
         return True
 
 
