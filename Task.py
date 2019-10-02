@@ -1,3 +1,6 @@
+import Memory
+import CPU
+
 class Task:
     n_task = 0
     task_list = []
@@ -16,15 +19,22 @@ class Task:
         self.no = Task.n_task
         Task.task_list.append(self)
 
+    def set_memory(self, memory: Memory.Memory):
+        self.memory: Memory.Memory = memory
+
+    def set_cpu_frequency(self, cpu_frequency: CPU.CpuFrequency):
+        self.cpu_frequency: CPU.CpuFrequency = cpu_frequency
+
     @staticmethod
     def calculate_det(task):
-        new_det = task.wcet /
+        pass
 
     @staticmethod
     def get_real_execution_time(task):
         if task.det_remain < task.gap:
             return task.det_remain
-        else: return task.gap
+        else:
+            return task.gap
 
 
 
