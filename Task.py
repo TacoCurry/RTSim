@@ -25,6 +25,9 @@ class Task:
     def set_cpu_frequency(self, cpu_frequency: CPU.CpuFrequency):
         self.cpu_frequency: CPU.CpuFrequency = cpu_frequency
 
+    def revert_task_det(self,det,det_remain):
+
+
     @staticmethod
     def calculate_det(task):
         pass
@@ -35,6 +38,7 @@ class Task:
             return task.det_remain
         else:
             return task.gap
+
 
 
 
