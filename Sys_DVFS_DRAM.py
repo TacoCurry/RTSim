@@ -3,9 +3,9 @@ import CPU
 import Memory
 import Task
 
-class Dvs_Dram(System.system):
-    System.system.name = "dvsdram"
-    System.system.desc = "DVS with dram(dvs-dram)"
+class DVFS_DRAM(System.System):
+    System.System.name = "dvsdram"
+    System.System.desc = "DVS with dram(dvs-dram)"
 
     def assign_task(self, task: Task.Task):
         Task.Task.idx_cpufreq=1

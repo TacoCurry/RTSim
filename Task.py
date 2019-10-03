@@ -1,42 +1,79 @@
-import Memory
-import CPU
+import math
+
 
 class Task:
     n_task = 0
-    task_list = []
+    tasks = []
 
-    def __init__(self, wcet, period, memory_req, memory_active_ratio):
+    def __init__(self, wcet, period, mem_req, mem_active_ratio):
         self.wcet = wcet
         self.period = period
-        self.memory_req = memory_req
-        self.memory_active_ratio = memory_active_ratio
+        self.memory_req = mem_req
+        self.memory_active_ratio = mem_active_ratio
 
-        self.idx_cpufreq=0
-        self.det = 0
-        self.det_remain = 0
-        self.gap = 0
+        self.no = None
+        self.cpufreq = None
+        self.memory = None
 
-        self.det_old = 0
-        self.det_remain_old =0
+        self.det = None
+        self.det_remain = None
+        self.det_old = None
+        self.det_remain_old = None
 
-        Task.n_task += 1
-        self.no = Task.n_task
-        Task.task_list.append(self)
+        self.gap = None
 
-    def set_memory(self, memory: Memory.Memory):
-        self.memory: Memory.Memory = memory
 
-    def set_cpu_frequency(self, cpu_frequency: CPU.CpuFrequency):
-        self.cpu_frequency: CPU.CpuFrequency = cpu_frequency
 
-    def revert_task_det(self,det,det_remain):
-        self.det= self.det_old
-        self.det_remain=self.det_remain_old
+    def set_memory(self, memory):
+        self.memory = memory
+
+    def set_cpu_frequency(self, cpu_frequency):
+        self.cpu_frequency = cpu_frequency
+
 
 
     @staticmethod
-    def calculate_det(task):
+    def insert_task(wcet: int, period: int, mem_req: int, mem_active_ratio: float):
+        task = Task(wcet, period, mem_req, mem_active_ratio)
+        Task.n_task += 1
+        task.no = Task.n_task
+        Task.tasks.append(task)
+
+    @staticmethod
+    def calc_task_det(task):
+        new_det = task.wcet / (task.cpufreq.wcet_scale * task.memory.wcet_scale)
+
+        task.det_old = task.det
+        task.det = int(round(new_det))
+        if task.det == 0:
+            task.det = 1
+
+        task.det_remain_old = task.det_remain
+        if task.det_remain > 0 & task.det != task.det_old:
+            task.det_remain = int(round(task.det_remain * (new_det / task.det_old)))
+
+    @staticmethod
+    def revert_task_det(task):
+        task.det = task.det_old
+        task.det_remain = task.det_remain_old
+
+    @staticmethod
+    def get_tasks_ndet() -> float:
+        result = 0.0
+        for task in Task.tasks:
+            result += task.det * 1.0 / task.period
+        return result
+
+    @staticmethod
+    def is_schedulable(task) -> bool:
+        if Task.get_tasks_ndet() + (task.det * 1.0 / task.period) <= 1:
+            return True
+        return False
+
+    @staticmethod
+    def set_tasks() -> bool:
         pass
+
 
     @staticmethod
     def get_real_execution_time(task):
@@ -45,7 +82,5 @@ class Task:
         else:
             return task.gap
 
-    @staticmethod
-    def is_schedulable(task):
-        pass
+
 

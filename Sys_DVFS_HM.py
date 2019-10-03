@@ -3,9 +3,10 @@ import CPU
 import Memory
 import Task
 
-class Hm(System.system):
-    System.system.name="dvshm"
-    System.system.desc="DVS with hybrid memory(dvs-hm)"
+
+class DVFS_HM(System.System):
+    System.System.name= "dvshm"
+    System.System.desc= "DVS with hybrid memory(dvs-hm)"
 
     def assign_task(self, task):
         mem_types = [Memory.Memory.TYPE_LPM, Memory.Memory.TYPE_DRAM]

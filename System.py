@@ -1,8 +1,8 @@
 import Task;
 
 
-class system:
-    '''super class of all POLICYs'''
+class System:
+    """super class of all POLICYs"""
     def __init__(self,name,desc):
         self.task = Task.Task()
         self.name=name

@@ -3,9 +3,9 @@ import CPU
 import Memory
 import Task
 
-class Hm(System.system):
-    System.system.name = "hm"
-    System.system.desc = "hybrid memory"
+class HM(System.System):
+    System.System.name = "hm"
+    System.System.desc = "hybrid memory"
 
     def assign_task(self, task: Task.Task):
         mem_types = [Memory.Memory.TYPE_LPM, Memory.Memory.TYPE_DRAM]
