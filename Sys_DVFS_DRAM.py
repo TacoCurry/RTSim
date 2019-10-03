@@ -7,14 +7,15 @@ class DVFS_DRAM(System.System):
     System.System.name = "dvsdram"
     System.System.desc = "DVS with dram(dvs-dram)"
 
-    def assign_task(self, task: Task.Task):
+    def assign_task(self, task):
         Task.Task.idx_cpufreq=1
         if not Memory.Memory.assign_memory(task, Memory.Memory.TYPE_DRAM):
             return False
+        return True
 
-    def reassign_task(self, task: Task.Task):
+    def reassign_task(self, task):
         for i in range(CPU.CPU.n_cpufreqs,1,-1):
-            Task.Task.idx_cpufreq=1
+            Task.Task.idx_cpufreq=i
             Task.cal_task_det(task)
             if(Task.Task.is_schedulable(task)):
                 return True

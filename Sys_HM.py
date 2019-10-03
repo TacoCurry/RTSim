@@ -7,26 +7,23 @@ class HM(System.System):
     System.System.name = "hm"
     System.System.desc = "hybrid memory"
 
-    def assign_task(self, task: Task.Task):
+    def assign_task(self, task):
         mem_types = [Memory.Memory.TYPE_LPM, Memory.Memory.TYPE_DRAM]
         Task.Task.idx_cpufreq = 1
         for mem_type in mem_types:
-            Memory.Memory.assign_memory(task, mem_type)
-            Task.Task.calculate_det(task)
-            if Task.Task.is_schedulable(task):
+            if(Memory.Memory.assign_memory(task, mem_type)):
                 return True
-            Task.Task.revert_task_det(task)
         return False
 
-    def reassign_task(self,task:Task.Task):
-        mem_types = [Memory.Memory.TYPE_LPM, Memory.Memory.TYPE_LPM]
+    def reassign_task(self,task):
+        mem_types = [Memory.Memory.TYPE_LPM, Memory.Memory.TYPE_DRAM]
         Memory.Memory.revoke_memory()
         for mem_type in mem_types:
-            Memory.Memory.assign_memory(task, mem_type)
-            Task.Task.calculate_det(task)
-            if Task.Task.is_schedulable(task):
-                return True
-            Task.Task.revert_task_det(task)
+           if Memory.Memory.assign_memory(task, mem_type):
+                Task.Task.calculate_det(task)
+                if Task.Task.is_schedulable(task):
+                    return True
+                Task.Task.revert_task_det(task)
         return False
 
 

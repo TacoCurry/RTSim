@@ -11,11 +11,8 @@ class DVFS_HM(System.System):
     def assign_task(self, task):
         mem_types = [Memory.Memory.TYPE_LPM, Memory.Memory.TYPE_DRAM]
         for mem_type in mem_types:
-            Memory.Memory.assign_memory(task, mem_type)
-            Task.Task.calculate_det(task)
-            if Task.Task.is_schedulable(task):
+            if Memory.Memory.assign_memory(task, mem_type):
                 return True
-            Task.Task.revert_task_det(task)
         return False
 
     def reassign_task(self,task):

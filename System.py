@@ -1,5 +1,5 @@
 import Task;
-
+import Memory;
 
 class System:
     """super class of all POLICYs"""
@@ -9,8 +9,10 @@ class System:
         self.desc=desc
 
     def assign_task(self, task):
-        pass
-        # system_task.idx_cpufreq=1
+        Task.Task.idx_cpufreq = 1
+        return Memory.Memory.assign_memory(task, Memory.Memory.TYPE_DRAM)
+
+    # system_task.idx_cpufreq=1
         # return 1;
 
     def reassign_task(self,task):
