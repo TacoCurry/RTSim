@@ -13,9 +13,7 @@ class Memory:
         self.wcet_scale = wcet_scale
         self.power_active = power_active
         self.power_idle = power_idle
-
         self.used_capacity = 0
-        self.n_tasks = 0
 
     @staticmethod
     def get_memory(mem_type):
@@ -59,3 +57,10 @@ class Memory:
             memory.used_capacity = 0
             Memory.total_capacity += memory.capacity
 
+
+class HM(Memory):
+    pass
+
+
+class DRAM(Memory):
+    pass
