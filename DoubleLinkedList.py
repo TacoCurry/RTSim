@@ -7,30 +7,27 @@ class ListNode:
 
 class DoubleLinkedList:
     def __init__(self):
-        self.head: ListNode = None
-        self.tail: ListNode = None
+        dummy = ListNode(None)
+        dummy.before = dummy.after = dummy
+        self.head: ListNode = dummy
+        self.tail: ListNode = dummy
 
     def add_last(self, item):
         new_node = ListNode(item)
-        if self.is_empty():
-            self.head = self.tail = new_node
-            new_node.before = new_node.after = new_node
-        else:
-            new_node.before = self.tail
-            new_node.after = self.head
-            self.tail.after = self.head.before = new_node
-            self.tail = new_node
+        new_node.before = self.tail
+        new_node.after = self.head
+        self.tail.after = self.head.before = new_node
+        self.tail = new_node
 
     def add_first(self, item):
         new_node = ListNode(item)
         if self.is_empty():
-            self.head = self.tail = new_node
-            new_node.before = new_node.after = new_node
+            self.add_last(item)
         else:
-            new_node.before = self.tail
-            new_node.after = self.head
-            self.tail.after = self.head.before = new_node
-            self.head = new_node
+            new_node.before = self.head
+            new_node.after = self.head.after
+            self.head.after.before = new_node
+            self.head.after = new_node
 
     # def add(self, pos, item):
     #     pass
@@ -45,15 +42,14 @@ class DoubleLinkedList:
     #     pass
 
     def is_in_list(self, item) -> bool:
-        if self.head.item == item:
-            return True
+        if self.is_empty():
+            return False
 
         node = self.head.after
         while node != self.head:
             if node.item == item:
                 return True
             node = node.after
-
         return False
 
     # def get_entry(self, pos) -> int:
@@ -63,7 +59,7 @@ class DoubleLinkedList:
     #     pass
 
     def is_empty(self) -> bool:
-        if self.head is None:
+        if self.head == self.tail:
             return True
         return False
 
