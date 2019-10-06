@@ -2,7 +2,7 @@ from abc import *
 from CPU import NoneDVFSCPU, DVFSCPU
 from Memory import Memory
 import sys
-from Task import Task
+from Task import Task, TaskQueue
 
 
 class System(metaclass=ABCMeta):
@@ -13,12 +13,13 @@ class System(metaclass=ABCMeta):
         self.desc = None
         self.n_core = None
         self.end_sim_time = None
+        self.task_queue = None
 
     def run(self):
         self.end_sim_time = input("실행할 시뮬레이션 시간을 입력하세요: ")
         self.set_processor()
         self.set_memory()
-        self.load_tasks()
+        self.set_tasks()
         # run simulator...
 
     @abstractmethod
@@ -60,13 +61,16 @@ class System(metaclass=ABCMeta):
         except:
             System.error("memory 파일의 형식이 잘못 되었습니다.")
 
-    def load_tasks(self, input_file="input_tasks.txt"):
+    def set_tasks(self, input_file="input_tasks.txt"):
         try:
+            self.task_queue = TaskQueue()
             with open(input_file, "r", encoding='UTF8') as f:
                 n_task = int(f.readline())
                 for i in range(n_task):
                     temp = f.readline().split()
-                    Task.insert_task(wcet=temp[0], period=temp[1], memory_req=temp[2], memory_active_ratio=temp[3])
+                    self.task_queue.insert_task(wcet=temp[0], period=temp[1],
+                                                memory_req=temp[2], mem_active_ratio=temp[3])
+            # setup_tasks
         except FileNotFoundError:
             System.error("task 정보 파일을 찾을 수 없습니다.")
         except:
@@ -112,10 +116,10 @@ class Hm(System):
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
             if Memory.assign_memory(task, mem_type):
-                task.calc_task_det()
+                task.calc_det()
                 if task.is_schedulable():
                     return True
-                task.revert_task_det()
+                task.revert_det()
         return False
 
 

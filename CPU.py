@@ -44,10 +44,10 @@ class DVFSCPU(CPU):
     def reassign_cpufreq(self, task) -> bool:
         for cpufreq in self.cpufreqs:
             task.cpu_frequency = cpufreq
-            task.calc_task_det()
+            task.calc_det()
             if task.is_schedulable():
                 return True
-            task.revert_task_det()
+            task.revert_det()
         return False
 
 
