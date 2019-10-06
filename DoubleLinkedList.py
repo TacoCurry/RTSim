@@ -9,25 +9,24 @@ class DoubleLinkedList:
     def __init__(self):
         dummy = ListNode(None)
         dummy.before = dummy.after = dummy
-        self.head: ListNode = dummy
-        self.tail: ListNode = dummy
+        self.header: ListNode = dummy
+        # self.tail: ListNode = dummy
 
-    def add_last(self, item):
+    def add_last(self, item) -> ListNode:
         new_node = ListNode(item)
-        new_node.before = self.tail
-        new_node.after = self.head
-        self.tail.after = self.head.before = new_node
-        self.tail = new_node
+        new_node.before = self.header.before
+        new_node.after = self.header
+        self.header.before.after = new_node
+        self.header.before = new_node
+        return new_node
 
-    def add_first(self, item):
+    def add_first(self, item) -> ListNode:
         new_node = ListNode(item)
-        if self.is_empty():
-            self.add_last(item)
-        else:
-            new_node.before = self.head
-            new_node.after = self.head.after
-            self.head.after.before = new_node
-            self.head.after = new_node
+        new_node.before = self.header
+        new_node.after = self.header.after
+        self.header.after.before = new_node
+        self.header.after = new_node
+        return new_node
 
     # def add(self, pos, item):
     #     pass
@@ -45,8 +44,8 @@ class DoubleLinkedList:
         if self.is_empty():
             return False
 
-        node = self.head.after
-        while node != self.head:
+        node = self.header.after
+        while node != self.header:
             if node.item == item:
                 return True
             node = node.after
@@ -59,7 +58,7 @@ class DoubleLinkedList:
     #     pass
 
     def is_empty(self) -> bool:
-        if self.head == self.tail:
+        if self.header.after == self.header:
             return True
         return False
 
@@ -68,3 +67,9 @@ class DoubleLinkedList:
     #
     # def display(self):
     #     pass
+
+    @staticmethod
+    def list_del_init(node):
+        node.before.after = node.after
+        node.after.before = node.before
+        node.before = node.after = node

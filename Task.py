@@ -1,4 +1,82 @@
 import math
+from DoubleLinkedList import DoubleLinkedList, ListNode
+
+
+class TaskQueue(DoubleLinkedList):
+    def __init__(self):
+        super().__init__()
+        self.n_task = 0
+
+    def insert_task(self, wcet: int, period: int, mem_req: int, mem_active_ratio: float):
+        task = Task(wcet, period, mem_req, mem_active_ratio)
+        self.n_task += 1
+        task.no = self.n_task
+        task.node = self.add_last(task)
+
+    def get_tasks_ndet(self) -> float:
+        result = 0.0
+        if self.n_task == 0:
+            return result
+
+        result += self.header.item.det
+        node = self.header.after
+        while node != self.header:
+            result += node.item.det * 1.0 / node.item.period
+            node = node.after
+        return result
+
+    def is_schedule(self, task) -> bool:
+        if self.get_tasks_ndet() + (task.det * 1.0 / task.period) <= 1:
+            return True
+        return False
+
+    def setup_tasks(self, system) -> bool:
+        # self(queue)를 temp_head에 복사하고 self는 init하기.
+        temp_header = self.add_first(None)
+        self.list_del_init(self.header)
+
+        if not self.is_empty():
+            raise Exception("debug, not empty queue")
+
+        node = temp_header.after
+        while node != temp_header:
+            node_next = node.after
+            self.list_del_init(node)
+            if not system.assign_task(node.item):
+                raise Exception("insufficient memory")
+
+            node.item.calc_det()
+            if not self.is_schedule(node.item):
+                raise Exception("unschedule task")
+
+            self.requeue_task(node.item, 0)
+            node = node_next
+        return True
+
+    def get_head_task(self):
+        pass
+        # 이게 task를 반환해야하는지 노드를 반환해야 하는지 잘 모르겠으니 나중에 짜겠어요
+        # if self.is_empty():
+        #     return None
+        # return self.header.after.item
+
+    def pop_head_task(self):
+        pass
+        # 이게 task를 반환해야하는지 노드를 반환해야 하는지 잘 모르겠으니 나중에 짜겠어요
+        # if self.is_empty():
+        #     return None
+        # head_task = self.header.after
+        # self.list_del_init(head_task)
+        # return head_task.item
+
+    def delay_tasks(self):
+        pass
+
+    def requeue_task(self, task, tick):
+        pass
+
+    def apply_gap_head(self):
+        pass
 
 
 class Task:
@@ -12,7 +90,7 @@ class Task:
         self.memory_active_ratio = mem_active_ratio
 
         self.no = None
-        self.cpufreq = None
+        self.cpu_frequency = None
         self.memory = None
 
         self.det = None
@@ -20,67 +98,45 @@ class Task:
         self.det_old = None
         self.det_remain_old = None
 
+        self.deadline = None
+        self.gap_head = None
         self.gap = None
 
+        self.node = None
 
+    def calc_det(self):
+        new_det = self.wcet / (self.cpufreq.wcet_scale * self.memory.wcet_scale)
 
-    def set_memory(self, memory):
-        self.memory = memory
+        self.det_old = self.det
+        self.det = int(round(new_det))
+        if self.det == 0:
+            self.det = 1
 
-    def set_cpu_frequency(self, cpu_frequency):
-        self.cpu_frequency = cpu_frequency
+        self.det_remain_old = self.det_remain
+        if self.det_remain > 0 & self.det != self.det_old:
+            self.det_remain = int(round(self.det_remain * (new_det / self.det_old)))
 
+    def revert_det(self):
+        self.det = self.det_old
+        self.det_remain = self.det_remain_old
 
-
-    @staticmethod
-    def insert_task(wcet: int, period: int, mem_req: int, mem_active_ratio: float):
-        task = Task(wcet, period, mem_req, mem_active_ratio)
-        Task.n_task += 1
-        task.no = Task.n_task
-        Task.tasks.append(task)
-
-    @staticmethod
-    def calc_task_det(task):
-        new_det = task.wcet / (task.cpufreq.wcet_scale * task.memory.wcet_scale)
-
-        task.det_old = task.det
-        task.det = int(round(new_det))
-        if task.det == 0:
-            task.det = 1
-
-        task.det_remain_old = task.det_remain
-        if task.det_remain > 0 & task.det != task.det_old:
-            task.det_remain = int(round(task.det_remain * (new_det / task.det_old)))
+    def get_real_execution_time(self):
+        if self.det_remain < self.gap:
+            return self.det_remain
+        else:
+            return self.gap
 
     @staticmethod
-    def revert_task_det(task):
-        task.det = task.det_old
-        task.det_remain = task.det_remain_old
+    def is_preceding(task, task_cmp) -> bool:
+        etr = (task.det_remain * 1.0) / task.deadline
+        etr_cmp = (task_cmp.det_remain * 1.0) / task_cmp.deadline
 
-    @staticmethod
-    def get_tasks_ndet() -> float:
-        result = 0.0
-        for task in Task.tasks:
-            result += task.det * 1.0 / task.period
-        return result
-
-    @staticmethod
-    def is_schedulable(task) -> bool:
-        if Task.get_tasks_ndet() + (task.det * 1.0 / task.period) <= 1:
+        if etr > etr_cmp:
+            return True
+        elif etr < etr_cmp:
+            return False
+        elif task.no < task_cmp.no:
             return True
         return False
-
-    @staticmethod
-    def set_tasks() -> bool:
-        pass
-
-
-    @staticmethod
-    def get_real_execution_time(task):
-        if task.det_remain < task.gap:
-            return task.det_remain
-        else:
-            return task.gap
-
 
 
