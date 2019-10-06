@@ -28,7 +28,11 @@ class TaskQueue(DoubleLinkedList):
     def is_schedule(self, task) -> bool:
         if self.get_tasks_ndet() + (task.det * 1.0 / task.period) <= 1:
             return True
-        return False
+        sum_ndet=0
+        if(task is not None):
+            sum_ndet += (task.det*1.0/task.period)
+        if(sum_ndet>1):
+            return False
 
     def setup_tasks(self, system) -> bool:
         # self(queue)를 temp_head에 복사하고 self는 init하기.
@@ -75,7 +79,22 @@ class TaskQueue(DoubleLinkedList):
     def requeue_task(self, task, tick):
         pass
 
-    def apply_gap_head(self):
+    def apply_gap_head(self, gap_head):
+
+        """head=get_head_task()"""
+
+        pass
+    
+    def get_new_start(self):
+        pass
+
+    def schedule_task(self,task)-> bool:
+        pass
+
+    def check_queed_tasks(self):
+        pass
+
+    def reinit_tasks(self):
         pass
 
 
