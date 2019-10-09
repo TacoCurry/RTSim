@@ -1,6 +1,6 @@
 class ListNode:
-    def __init__(self, item):
-        self.item = item
+    def __init__(self, task):
+        self.task = task
         self.before: ListNode = None
         self.after: ListNode = None
 
@@ -12,16 +12,16 @@ class DoubleLinkedList:
         self.header: ListNode = dummy
         # self.tail: ListNode = dummy
 
-    def add_last(self, item) -> ListNode:
-        new_node = ListNode(item)
+    def add_last(self, task) -> ListNode:
+        new_node = ListNode(task)
         new_node.before = self.header.before
         new_node.after = self.header
         self.header.before.after = new_node
         self.header.before = new_node
         return new_node
 
-    def add_first(self, item) -> ListNode:
-        new_node = ListNode(item)
+    def add_first(self, task) -> ListNode:
+        new_node = ListNode(task)
         new_node.before = self.header
         new_node.after = self.header.after
         self.header.after.before = new_node
@@ -40,13 +40,13 @@ class DoubleLinkedList:
     # def replace(self, pos, item):
     #     pass
 
-    def is_in_list(self, item) -> bool:
+    def is_in_list(self, task) -> bool:
         if self.is_empty():
             return False
 
         node = self.header.after
         while node != self.header:
-            if node.item == item:
+            if node.task == task:
                 return True
             node = node.after
         return False
