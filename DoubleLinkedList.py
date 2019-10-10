@@ -4,6 +4,15 @@ class ListNode:
         self.before: ListNode = None
         self.after: ListNode = None
 
+    @staticmethod
+    def change_node_task(node1, node2):
+        temp = node1.task
+        node1.task = node2.task
+        node2.task = temp
+
+        node1.task.node = node1
+        node2.task.node = node2
+
 
 class DoubleLinkedList:
     def __init__(self):

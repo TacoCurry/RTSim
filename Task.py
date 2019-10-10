@@ -127,7 +127,7 @@ class TaskQueue(DoubleLinkedList):
         self.list_del_init(head_task)
         return head_task.task
 
-    def delay_tasks(self, task: Task, p_target: Task) -> int:
+    def delay_tasks(self, task: Task, p_target: Task):
         target: Task = p_target
         next_target = None
 
@@ -154,8 +154,18 @@ class TaskQueue(DoubleLinkedList):
                     if Task.is_preceding(target, next_target):
                         target.gap = self.delay_tasks(target, next_target)
                     else:
-                        pass
-        return i
+                        ListNode.change_node_task(target.node, next_target.node)
+                        target.gap = next_target.gap
+                        next_target.gap = self.delay_tasks(next_target, target)
+
+                        temp = target
+                        target = next_target
+                        next_target = temp
+
+        task.det_remain = det_remain_saved
+        task.deadline = deadline_saved
+        assert i != 0
+        return i, target.node
 
     def apply_gap_head(self, gap_head: int):
         if self.is_empty():
