@@ -3,6 +3,7 @@ from CPU import NoneDVFSCPU, DVFSCPU
 from Memory import Memory
 import sys
 from Task import Task, TaskQueue
+from Report import Report
 
 
 class System(metaclass=ABCMeta):
@@ -14,24 +15,26 @@ class System(metaclass=ABCMeta):
         self.n_core = None
         self.end_sim_time = None
         self.task_queue = None
+        self.report = None
 
     def run(self):
         self.end_sim_time = input("실행할 시뮬레이션 시간을 입력하세요: ")
         self.set_processor()
         self.set_memory()
         self.set_tasks()
+        self.report = Report()
         # run simulator...
         time = 0
         while time <= self.end_sim_time:
             task = self.task_queue.pop_head_task()
             if not task:
                 break
-            if not self.task_queue.schedule_task(task):
+            if not self.task_queue.schedule_task(task, self):
                 raise Exception("Simulation failed")
             self.task_queue.check_queued_tasks()
-            # add_utilization()
+            self.report.add_utilization(self.task_queue)
             self.task.show_queued_tasks()
-        # report_result()
+        self.report.print_result()
 
     @abstractmethod
     def assign_task(self, task) -> bool:
