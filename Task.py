@@ -62,6 +62,10 @@ class Task:
             return True
         return False
 
+    def desc_task(self):
+        pass
+        # task의 속성을 설명해주세요
+
 
 class TaskQueue(DoubleLinkedList):
     def __init__(self):
@@ -209,7 +213,7 @@ class TaskQueue(DoubleLinkedList):
         #     if start < ticks | (start == ticks & Task.is_preceding(task, til)):
         #         if
 
-    def schedule_task(self, task) -> (bool, int):
+    def schedule_task(self, task, system) -> (bool, int):
         pass
         # time = 0
         # time += task.gap_head
@@ -229,3 +233,7 @@ class TaskQueue(DoubleLinkedList):
             task.gap = 0
             task.deadline = 0
             node = node.after
+
+    def show_queued_tasks(self):
+        pass
+        # 큐에 있는 태스크 보여주기

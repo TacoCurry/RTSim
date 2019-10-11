@@ -14,6 +14,8 @@ class CPU(metaclass=ABCMeta):
     def __init__(self):
         self.cpufreqs = []
         self.n_cpufreqs = 0
+        self.power_consumed_cpu_active = 0
+        self.power_consumed_cpu_idle = 0
 
     def insert_cpufreq(self, wcet_scale, power_active, power_idle) -> bool:
         if self.n_cpufreqs >= CPU.MAX_CPU_FREQS:
