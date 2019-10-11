@@ -21,6 +21,17 @@ class System(metaclass=ABCMeta):
         self.set_memory()
         self.set_tasks()
         # run simulator...
+        time = 0
+        while time <= self.end_sim_time:
+            task = self.task_queue.pop_head_task()
+            if not task:
+                break
+            if not self.task_queue.schedule_task(task):
+                raise Exception("Simulation failed")
+            self.task_queue.check_queued_tasks()
+            # add_utilization()
+            self.task.show_queued_tasks()
+        # report_result()
 
     @abstractmethod
     def assign_task(self, task) -> bool:
@@ -70,7 +81,8 @@ class System(metaclass=ABCMeta):
                     temp = f.readline().split()
                     self.task_queue.insert_task(wcet=temp[0], period=temp[1],
                                                 memory_req=temp[2], mem_active_ratio=temp[3])
-            # setup_tasks
+            if not self.task_queue.setup_tasks(self):
+                raise Exception("failed to setup tasks")
         except FileNotFoundError:
             System.error("task 정보 파일을 찾을 수 없습니다.")
         except:
