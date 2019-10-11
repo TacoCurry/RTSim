@@ -1,6 +1,6 @@
 from abc import *
 from CPU import NoneDVFSCPU, DVFSCPU
-from Memory import Memory
+from Memory import Memory,Memories
 import sys
 from Task import Task, TaskQueue
 from Report import Report
@@ -8,9 +8,13 @@ from Report import Report
 
 class System(metaclass=ABCMeta):
     """super class of all POLICYs"""
+
+
+
     def __init__(self):
         self.name = None
         self.CPU = None
+        self.Memory =None
         self.desc = None
         self.n_core = None
         self.end_sim_time = None
@@ -24,8 +28,9 @@ class System(metaclass=ABCMeta):
         self.set_tasks()
         self.report = Report()
         # run simulator...
-        time = 0
-        while time <= self.end_sim_time:
+        self.time = 0
+
+        while self.time <= self.end_sim_time:
             task = self.task_queue.pop_head_task()
             if not task:
                 break
