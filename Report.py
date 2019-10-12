@@ -37,5 +37,5 @@ class Report:
         self.power_consumed_idle_avg = self.power_consumed_idle/system.time
         self.utilization=self.sum_utils/self.n_utils*100
     def print_result(self):
-        pass
-        # ~~
+        print("%10s %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf"%(self.policy_name, self.power_consumed_avg, self.utilization, self.power_consumed_cpu_avg, self.power_consumed_mem_avg, self.power_consumed_active_avg, self.power_consumed_idle_avg))
+        
