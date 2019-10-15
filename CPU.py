@@ -51,6 +51,3 @@ class DVFSCPU(CPU):
                 return True
             task.revert_det()
         return False
-
-
-
