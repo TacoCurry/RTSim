@@ -19,6 +19,7 @@ class System(metaclass=ABCMeta):
         self.task_queue = None
         self.report = None
         self.verbose = None
+        self.time = None
 
     def run(self):
         self.end_sim_time = input("실행할 시뮬레이션 시간을 입력하세요: ")
@@ -33,10 +34,9 @@ class System(metaclass=ABCMeta):
         self.set_memory()
         self.set_tasks()
         self.report = Report()
-
-        # run simulator
-        time = 0
-        while time <= self.end_sim_time:
+        # run simulator...
+        self.time = 0
+        while self.time <= self.end_sim_time:
             task = self.task_queue.pop_head_task()
             if not task:
                 break
@@ -194,3 +194,4 @@ class DvfsHm(System):
                     return True
                 Memory.revoke_memory(task)
         return False
+
