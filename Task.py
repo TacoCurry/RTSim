@@ -1,4 +1,3 @@
-import math
 from DoubleLinkedList import DoubleLinkedList, ListNode
 
 
@@ -28,7 +27,7 @@ class Task:
         self.node = None
 
     def calc_det(self):
-        new_det = self.wcet / (self.cpufreq.wcet_scale * self.memory.wcet_scale)
+        new_det = self.wcet / (self.cpu_frequency.wcet_scale * self.memory.wcet_scale)
 
         self.det_old = self.det
         self.det = int(round(new_det))
@@ -182,7 +181,7 @@ class TaskQueue(DoubleLinkedList):
             node = node.after
 
     @staticmethod
-    def get_new_start(self, task: Task, prev_task: Task, start: int) -> int:
+    def get_new_start(task: Task, prev_task: Task, start: int) -> int:
         det_remain_saved = prev_task.det_remain
         deadline_saved = prev_task.deadline
 

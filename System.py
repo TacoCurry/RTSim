@@ -2,7 +2,7 @@ from abc import *
 from CPU import NoneDVFSCPU, DVFSCPU
 from Memory import Memory, Memories
 import sys
-from Task import Task, TaskQueue
+from Task import TaskQueue
 from Report import Report
 
 
@@ -22,7 +22,7 @@ class System(metaclass=ABCMeta):
         self.time = None
 
     def run(self):
-        self.end_sim_time = input("실행할 시뮬레이션 시간을 입력하세요: ")
+        self.end_sim_time = int(input("실행할 시뮬레이션 시간을 입력하세요(정수): "))
 
         verbose = int(input("상세 출력을 원하시면 1을 입력하세요:"))
         if verbose == 1:
@@ -45,7 +45,8 @@ class System(metaclass=ABCMeta):
             self.task_queue.check_queued_tasks()
             self.report.add_utilization(self.task_queue)
             if self.verbose:
-                self.task.show_queued_tasks()
+                self.task_queue.show_queued_tasks()
+        self.report.make_report(self)
         self.report.print_result()
 
     @abstractmethod
@@ -72,8 +73,8 @@ class System(metaclass=ABCMeta):
                         wcet_scale=float(temp[0]), power_active=float(temp[1]), power_idle=float(temp[2]))
         except FileNotFoundError:
             System.error("processor 설정 파일을 찾을 수 없습니다.")
-        except:
-            System.error("processor 파일의 형식이 잘못 되었습니다.")
+        # except:
+        #     System.error("processor 파일의 형식이 잘못 되었습니다.")
 
     def set_memory(self, input_file="input_mem.txt"):
         try:
@@ -81,12 +82,12 @@ class System(metaclass=ABCMeta):
             with open(input_file, "r", encoding='UTF8') as f:
                 for i in range(2):
                     temp = f.readline().split()
-                    self.memories.insert_memory(memstr=temp[0], capacity=int(temp[1]), wcet_scale=float(temp[2]),
+                    self.memories.insert_memory(memory_str=temp[0], capacity=int(temp[1]), wcet_scale=float(temp[2]),
                                                 power_active=float(temp[3]), power_idle=float(temp[4]))
         except FileNotFoundError:
             System.error("memory 정보 파일을 찾을 수 없습니다.")
-        except:
-            System.error("memory 파일의 형식이 잘못 되었습니다.")
+        # except:
+        #     System.error("memory 파일의 형식이 잘못 되었습니다.")
 
     def set_tasks(self, input_file="input_tasks.txt"):
         try:
@@ -95,14 +96,14 @@ class System(metaclass=ABCMeta):
                 n_task = int(f.readline())
                 for i in range(n_task):
                     temp = f.readline().split()
-                    self.task_queue.insert_task(wcet=temp[0], period=temp[1],
-                                                memory_req=temp[2], mem_active_ratio=temp[3])
+                    self.task_queue.insert_task(wcet=int(temp[0]), period=int(temp[1]),
+                                                mem_req=int(temp[2]), mem_active_ratio=float(temp[3]))
             if not self.task_queue.setup_tasks(self):
                 raise Exception("failed to setup tasks")
         except FileNotFoundError:
             System.error("task 정보 파일을 찾을 수 없습니다.")
-        except:
-            System.error("task 파일의 형식이 잘못 되었습니다.")
+        # except:
+        #     System.error("task 파일의 형식이 잘못 되었습니다.")
 
 
 class Dram(System):
@@ -160,7 +161,7 @@ class DvfsDram(System):
 
     def assign_task(self, task) -> bool:
         self.CPU.assign_cpufreq(task)
-        if not Memories.assign_memory(task, Memory.TYPE_DRAM):
+        if not self.memories.assign_memory(task, Memory.TYPE_DRAM):
             return False
         return True
 
@@ -194,4 +195,3 @@ class DvfsHm(System):
                     return True
                 Memories.revoke_memory(task)
         return False
-
