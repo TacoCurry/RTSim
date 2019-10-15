@@ -114,7 +114,7 @@ class Dram(System):
 
     def assign_task(self, task) -> bool:
         self.CPU.assign_cpufreq(task)
-        return Memory.assign_memory(task, Memory.TYPE_DRAM)
+        return self.memories.assign_memory(task, Memory.TYPE_DRAM)
 
     def reassign_task(self, task) -> bool:
         return self.CPU.reassign_cpufreq(task)
@@ -132,18 +132,18 @@ class Hm(System):
 
         mem_types = [Memory.TYPE_DRAM, Memory.TYPE_LPM]
         for mem_type in mem_types:
-            if Memory.assign_memory(task, mem_type):
+            if self.memories.assign_memory(task, mem_type):
                 return True
         return False
 
     def reassign_task(self, task) -> bool:
         self.CPU.reassign_cpufreq(task)
 
-        Memory.revoke_memory(task)
+        Memories.revoke_memory(task)
 
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
-            if Memory.assign_memory(task, mem_type):
+            if self.memories.assign_memory(task, mem_type):
                 task.calc_det()
                 if task.is_schedulable():
                     return True
@@ -160,12 +160,12 @@ class DvfsDram(System):
 
     def assign_task(self, task) -> bool:
         self.CPU.assign_cpufreq(task)
-        if not Memory.assign_memory(task, Memory.TYPE_DRAM):
+        if not Memories.assign_memory(task, Memory.TYPE_DRAM):
             return False
         return True
 
     def reassign_task(self, task) -> bool:
-        return self.reassign_task(task)
+        return self.CPU.reassign_cpufreq(task)
 
 
 class DvfsHm(System):
@@ -180,18 +180,18 @@ class DvfsHm(System):
 
         mem_types = [Memory.TYPE_DRAM, Memory.TYPE_LPM]
         for mem_type in mem_types:
-            if Memory.assign_memory(task, mem_type):
+            if self.memories.assign_memory(task, mem_type):
                 return True
         return False
 
     def reassign_task(self, task) -> bool:
-        Memory.revoke_memory(task)
+        Memories.revoke_memory(task)
 
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
-            if Memory.assign_memory(task, mem_type):
+            if self.memories.assign_memory(task, mem_type):
                 if self.CPU.reassign_cpufreq(task):
                     return True
-                Memory.revoke_memory(task)
+                Memories.revoke_memory(task)
         return False
 
