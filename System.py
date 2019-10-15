@@ -1,6 +1,6 @@
 from abc import *
 from CPU import NoneDVFSCPU, DVFSCPU
-from Memory import Memory
+from Memory import Memory, Memories
 import sys
 from Task import Task, TaskQueue
 from Report import Report
@@ -8,22 +8,33 @@ from Report import Report
 
 class System(metaclass=ABCMeta):
     """super class of all POLICYs"""
+
     def __init__(self):
         self.name = None
         self.CPU = None
+        self.memories = None
         self.desc = None
         self.n_core = None
         self.end_sim_time = None
         self.task_queue = None
         self.report = None
+        self.verbose = None
 
     def run(self):
         self.end_sim_time = input("실행할 시뮬레이션 시간을 입력하세요: ")
+
+        verbose = int(input("상세 출력을 원하시면 1을 입력하세요:"))
+        if verbose == 1:
+            self.verbose = True
+        else:
+            self.verbose = False
+
         self.set_processor()
         self.set_memory()
         self.set_tasks()
         self.report = Report()
-        # run simulator...
+
+        # run simulator
         time = 0
         while time <= self.end_sim_time:
             task = self.task_queue.pop_head_task()
@@ -33,7 +44,8 @@ class System(metaclass=ABCMeta):
                 raise Exception("Simulation failed")
             self.task_queue.check_queued_tasks()
             self.report.add_utilization(self.task_queue)
-            self.task.show_queued_tasks()
+            if self.verbose:
+                self.task.show_queued_tasks()
         self.report.print_result()
 
     @abstractmethod
@@ -65,11 +77,12 @@ class System(metaclass=ABCMeta):
 
     def set_memory(self, input_file="input_mem.txt"):
         try:
+            self.memories = Memories()
             with open(input_file, "r", encoding='UTF8') as f:
                 for i in range(2):
                     temp = f.readline().split()
-                    Memory.insert_memory(memstr=temp[0], capacity=int(temp[1]), wcet_scale=float(temp[2]),
-                                         power_active=float(temp[3]), power_idle=float(temp[4]))
+                    self.memories.insert_memory(memstr=temp[0], capacity=int(temp[1]), wcet_scale=float(temp[2]),
+                                                power_active=float(temp[3]), power_idle=float(temp[4]))
         except FileNotFoundError:
             System.error("memory 정보 파일을 찾을 수 없습니다.")
         except:
@@ -181,4 +194,3 @@ class DvfsHm(System):
                     return True
                 Memory.revoke_memory(task)
         return False
-
