@@ -23,19 +23,20 @@ class Report:
         self.n_utils += 1
 
     def make_report(self, system):
-        pass
-        self.power_consumed_cpu = system.CPU.power_consumed_cpu_active + system.CPU.power_consumed_cpu_idle
-        self.power_consumed_mem = system.Memories.power_consumed_mem_active + system.Memories.power_consumed_mem_idle
-        self.power_consumed_active = system.CPU.power_consumed_cpu_active + system.Memories.power_consumed_mem_active
-        self.power_consumed_idle = system.CPU.power_consumed_cpu_idle +  system.Memories.power_consumed_mem_idle
-        self.power_consumed = self.power_consumed_cpu + self.power_consumed_mem
+        power_consumed_cpu = system.CPU.power_consumed_cpu_active + system.CPU.power_consumed_cpu_idle
+        power_consumed_mem = system.Memories.power_consumed_mem_active + system.Memories.power_consumed_mem_idle
+        power_consumed_active = system.CPU.power_consumed_cpu_active + system.Memories.power_consumed_mem_active
+        power_consumed_idle = system.CPU.power_consumed_cpu_idle +  system.Memories.power_consumed_mem_idle
+        power_consumed = self.power_consumed_cpu + self.power_consumed_mem
 
-        self.power_consumed_avg = self.power_consumed/system.time
-        self.power_consumed_cpu_avg = self.power_consumed_cpu/system.time
-        self.power_consumed_mem_avg = self.power_consumed_mem / system.time
-        self.power_consumed_active_avg = self.power_consumed_active/ system.time
-        self.power_consumed_idle_avg = self.power_consumed_idle/system.time
-        self.utilization=self.sum_utils/self.n_utils*100
+        self.power_consumed_avg = float(power_consumed)/system.time
+        self.power_consumed_cpu_avg = float(power_consumed_cpu)/system.time
+        self.power_consumed_mem_avg = float(power_consumed_mem) / system.time
+        self.power_consumed_active_avg = float(power_consumed_active)/ system.time
+        self.power_consumed_idle_avg = float(power_consumed_idle)/system.time
+        self.utilization = float(self.sum_utils)/self.n_utils*100
+
     def print_result(self):
-        print("%10s %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf"%(self.policy_name, self.power_consumed_avg, self.utilization, self.power_consumed_cpu_avg, self.power_consumed_mem_avg, self.power_consumed_active_avg, self.power_consumed_idle_avg))
-        
+        print("%10s %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf" %
+              (self.policy_name, self.power_consumed_avg, self.utilization, self.power_consumed_cpu_avg,
+               self.power_consumed_mem_avg, self.power_consumed_active_avg, self.power_consumed_idle_avg))
