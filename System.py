@@ -3,6 +3,7 @@ from CPU import NoneDVFSCPU, DVFSCPU
 from Memory import Memory, Memories
 import heapq
 from Task import Task
+import sys
 
 
 class System(metaclass=ABCMeta):
@@ -55,7 +56,7 @@ class System(metaclass=ABCMeta):
 
             if len(self.queue) == 0:
                 # for cpu
-                self.power_consumed_cpu_idle += self.CPU.cpufreqs[-1].power_idle
+                self.power_consumed_cpu_idle += self.CPU.frequencies[-1].power_idle
                 # for mem
                 for task in self.tasks:
                     self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
@@ -155,7 +156,7 @@ class System(metaclass=ABCMeta):
                 n_frequency = int(f.readline())
                 for i in range(n_frequency):
                     temp = f.readline().split()
-                    self.CPU.insert_cpufreq(
+                    self.CPU.insert_cpu_frequency(
                         wcet_scale=float(temp[0]), power_active=float(temp[1]), power_idle=float(temp[2]))
         except FileNotFoundError:
             System.error("processor 설정 파일을 찾을 수 없습니다.")
@@ -225,6 +226,10 @@ class System(metaclass=ABCMeta):
         heapq.heapify(temp)
         self.queue = temp
 
+    def error(self, message: str):
+        print(message)
+        sys.exit()
+
 
 class Dram(System):
     def __init__(self):
@@ -234,11 +239,11 @@ class Dram(System):
         self.CPU = NoneDVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
         return self.memories.assign_memory(task, Memory.TYPE_DRAM)
 
     def reassign_task(self, task) -> bool:
-        return self.CPU.reassign_cpufreq(task, self)
+        return self.CPU.reassign_cpu_frequency(task, self)
 
 
 class Hm(System):
@@ -249,7 +254,7 @@ class Hm(System):
         self.CPU = NoneDVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
 
         mem_types = [Memory.TYPE_DRAM, Memory.TYPE_LPM]
         for mem_type in mem_types:
@@ -258,7 +263,7 @@ class Hm(System):
         return False
 
     def reassign_task(self, task) -> bool:
-        self.CPU.reassign_cpufreq(task, self)
+        self.CPU.reassign_cpu_frequency(task, self)
 
         Memories.revoke_memory(task)
 
@@ -280,13 +285,13 @@ class DvfsDram(System):
         self.CPU = DVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
         if not self.memories.assign_memory(task, Memory.TYPE_DRAM):
             return False
         return True
 
     def reassign_task(self, task) -> bool:
-        return self.CPU.reassign_cpufreq(task, self)
+        return self.CPU.reassign_cpu_frequency(task, self)
 
 
 class DvfsHm(System):
@@ -297,7 +302,7 @@ class DvfsHm(System):
         self.CPU = DVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
 
         mem_types = [Memory.TYPE_DRAM, Memory.TYPE_LPM]
         for mem_type in mem_types:
@@ -311,7 +316,7 @@ class DvfsHm(System):
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
             if self.memories.assign_memory(task, mem_type):
-                if self.CPU.reassign_cpufreq(task, self):
+                if self.CPU.reassign_cpu_frequency(task, self):
                     return True
                 Memories.revoke_memory(task)
         return False
