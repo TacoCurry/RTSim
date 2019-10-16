@@ -50,6 +50,8 @@ class System(metaclass=ABCMeta):
         prev_exec_task = None
         while time <= self.end_sim_time:
             print(f'time = {time}')
+            print(self.print_queue())
+
             if len(self.queue) == 0:
                 # for cpu
                 self.power_consumed_cpu_idle += self.CPU.cpufreqs[-1].power_idle
@@ -61,6 +63,8 @@ class System(metaclass=ABCMeta):
                 exec_task = heapq.heappop(self.queue)[1]
                 if prev_exec_task != exec_task:
                     self.reassign_task(exec_task)
+
+                print(f'{time}부터 {time+1}까지 {exec_task.no} 실행')
 
                 # for a task (1 unit 실행)
                 wcet_scaled_cpu = 1/exec_task.cpu_frequency.wcet_scale
@@ -93,7 +97,10 @@ class System(metaclass=ABCMeta):
                 if exec_task.det_remain == 0:
                     exec_task.period_start += exec_task.period
                     exec_task.det_remain = exec_task.det
+                    exec_task.deadline = exec_task.period
                     heapq.heappush(self.wait, (exec_task.period_start, exec_task))
+                else:
+                    heapq.heappush(self.queue, (exec_task.calc_priority(), exec_task))
 
             # 타임 1더하고 wait중에 타임이랑 같은 건 큐로 넣어줌,
             time += 1
@@ -116,7 +123,7 @@ class System(metaclass=ABCMeta):
         power_consumed_mem = self.power_consumed_mem_active + self.power_consumed_mem_idle
         power_consumed_active = self.power_consumed_cpu_active + self.power_consumed_mem_active
         power_consumed_idle = self.power_consumed_cpu_idle + self.power_consumed_mem_idle
-        power_consumed = self.power_consumed_cpu + self.power_consumed_mem;
+        power_consumed = power_consumed_cpu + power_consumed_mem
 
         power_consumed_avg = power_consumed / time
         power_consumed_cpu_avg = power_consumed_cpu / time
@@ -206,6 +213,16 @@ class System(metaclass=ABCMeta):
         for task in self.tasks:
             task.check_task()
 
+    def print_queue(self):
+        temp = []
+        while len(self.queue) > 0:
+            tup = heapq.heappop(self.queue)
+            str = tup[1].desc_task()
+            print(f'priority:{tup[0]} /{str}')
+            temp.append(tup)
+        heapq.heapify(temp)
+        self.queue = temp
+
 
 class Dram(System):
     def __init__(self):
@@ -219,7 +236,7 @@ class Dram(System):
         return self.memories.assign_memory(task, Memory.TYPE_DRAM)
 
     def reassign_task(self, task) -> bool:
-        return self.CPU.reassign_cpufreq(task)
+        return self.CPU.reassign_cpufreq(task, self)
 
 
 class Hm(System):
@@ -239,7 +256,7 @@ class Hm(System):
         return False
 
     def reassign_task(self, task) -> bool:
-        self.CPU.reassign_cpufreq(task)
+        self.CPU.reassign_cpufreq(task, self)
 
         Memories.revoke_memory(task)
 
@@ -247,7 +264,7 @@ class Hm(System):
         for mem_type in mem_types:
             if self.memories.assign_memory(task, mem_type):
                 task.calc_det()
-                if task.is_schedulable():
+                if self.is_schedule(task):
                     return True
                 task.revert_det()
         return False
@@ -267,7 +284,7 @@ class DvfsDram(System):
         return True
 
     def reassign_task(self, task) -> bool:
-        return self.CPU.reassign_cpufreq(task)
+        return self.CPU.reassign_cpufreq(task, self)
 
 
 class DvfsHm(System):
@@ -292,7 +309,7 @@ class DvfsHm(System):
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
             if self.memories.assign_memory(task, mem_type):
-                if self.CPU.reassign_cpufreq(task):
+                if self.CPU.reassign_cpufreq(task, self):
                     return True
                 Memories.revoke_memory(task)
         return False

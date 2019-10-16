@@ -20,6 +20,9 @@ class Task:
 
         self.period_start = 0
 
+    def __lt__(self, other):
+        return self.no < other.no
+
     def calc_priority(self) -> float:
         # min heap 사용을 위해 역수로 계산.
         return float(self.deadline)/self.det_remain
@@ -43,9 +46,9 @@ class Task:
         self.det_remain = self.det_remain_old
 
     def desc_task(self) -> str:
-        return f'[no:{self.no}, wcet:{self.wcet}, period:{self.period}, ' \
-               f'cpu_freq(scale):{self.cpu_frequency.wcet_scale}, memory:{self.memory.type}, ' \
-               f'det:{self.det}, det_remain:{self.det_remain}, deadline:{self.deadline}]'
+        return (f'[no:{self.no}, wcet:{self.wcet}, period:{self.period} ' +
+                f'cpu_freq(scale):{self.cpu_frequency.wcet_scale}, memory:{self.memory.type} ' +
+                f'det:{self.det}, det_remain:{self.det_remain}, deadline:{self.deadline}]')
 
     def check_task(self):
         if self.det == 0:

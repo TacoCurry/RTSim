@@ -33,21 +33,21 @@ class CPU(metaclass=ABCMeta):
         task.cpu_frequency = self.cpufreqs[0]
 
     @abstractmethod
-    def reassign_cpufreq(self, task) -> bool:
+    def reassign_cpufreq(self, task, system) -> bool:
         pass
 
 
 class NoneDVFSCPU(CPU):
-    def reassign_cpufreq(self, task) -> bool:
+    def reassign_cpufreq(self, task, system) -> bool:
         return True
 
 
 class DVFSCPU(CPU):
-    def reassign_cpufreq(self, task) -> bool:
+    def reassign_cpufreq(self, task, system) -> bool:
         for cpufreq in self.cpufreqs:
             task.cpu_frequency = cpufreq
             task.calc_det()
-            if task.is_schedulable():
+            if system.is_schedule(task):
                 return True
             task.revert_det()
         return False
