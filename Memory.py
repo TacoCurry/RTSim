@@ -29,8 +29,6 @@ class Memories:
         self.list = []
         self.n_mem_types = 0
         self.total_capacity = 0
-        self.power_consumed_mem_active = 0
-        self.power_consumed_mem_idle = 0
 
     def get_memory(self, memory_type):
         for memory in self.list:
