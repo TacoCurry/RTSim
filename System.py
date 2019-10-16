@@ -50,7 +50,8 @@ class System(metaclass=ABCMeta):
         prev_exec_task = None
         while time <= self.end_sim_time:
             print(f'time = {time}')
-            print(self.print_queue())
+            if self.verbose:
+                print(self.print_queue())
 
             if len(self.queue) == 0:
                 # for cpu
@@ -63,6 +64,7 @@ class System(metaclass=ABCMeta):
                 exec_task = heapq.heappop(self.queue)[1]
                 if prev_exec_task != exec_task:
                     self.reassign_task(exec_task)
+                prev_exec_task = exec_task
 
                 print(f'{time}부터 {time+1}까지 {exec_task.no} 실행')
 
@@ -85,7 +87,7 @@ class System(metaclass=ABCMeta):
                     task.deadline -= 1
                     self.queue[i] = (task.calc_priority(), task)
                     self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
-                heapq.heapify(self.queue) # 재정렬 필요
+                heapq.heapify(self.queue)  # 재정렬 필요
                 for tup in self.wait:
                     task = tup[1]
                     self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
@@ -135,9 +137,9 @@ class System(metaclass=ABCMeta):
         print(f'policy: {self.name}')
         print(f'simulation time elapsed: {time}')
         print(f'average power consumed: {power_consumed_avg}')
-        print(f'CPU + MEM power consumed: {power_consumed_cpu_avg + power_consumed_mem_avg}')
-        print(f'ACTIVE + IDLE power consumed: {power_consumed_active_avg + power_consumed_idle_avg}')
-        print(f'utilzation: {utilization}')
+        print(f'CPU + MEM power consumed: {power_consumed_cpu_avg} + {power_consumed_mem_avg}')
+        print(f'ACTIVE + IDLE power consumed: {power_consumed_active_avg} + {power_consumed_idle_avg}')
+        print(f'utilzation: {utilization}%')
 
     @abstractmethod
     def assign_task(self, task) -> bool:

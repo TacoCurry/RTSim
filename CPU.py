@@ -7,6 +7,9 @@ class CpuFrequency:
         self.power_active = power_active
         self.power_idle = power_idle
 
+    def __lt__(self, other):
+        return self.wcet_scale < other.wcet_scale
+
 
 class CPU(metaclass=ABCMeta):
     MAX_CPU_FREQS = 15
@@ -23,11 +26,11 @@ class CPU(metaclass=ABCMeta):
 
         self.n_cpufreqs += 1
         self.cpufreqs.append(CpuFrequency(wcet_scale, power_active, power_idle))
-        self.sort_cpufreq()
+        # self.sort_cpufreq()
         return True
 
     def sort_cpufreq(self):
-        self.cpufreqs.sort(key=lambda object: object.wcet_scale, reverse=True)
+        self.cpufreqs.sort()
 
     def assign_cpufreq(self, task):
         task.cpu_frequency = self.cpufreqs[0]
@@ -44,8 +47,8 @@ class NoneDVFSCPU(CPU):
 
 class DVFSCPU(CPU):
     def reassign_cpufreq(self, task, system) -> bool:
-        for cpufreq in self.cpufreqs:
-            task.cpu_frequency = cpufreq
+        for i in range(len(self.cpufreqs)):
+            task.cpu_frequency = self.cpufreqs[len(self.cpufreqs)-1-i]
             task.calc_det()
             if system.is_schedule(task):
                 return True
