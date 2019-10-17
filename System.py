@@ -1,9 +1,9 @@
 from abc import *
 from CPU import NoneDVFSCPU, DVFSCPU
-from Memory import Memory, Memories
+from Memory import Memory
 import heapq
-from Task import Task
 import sys
+from Input import InputUtils
 
 
 class System(metaclass=ABCMeta):
@@ -33,17 +33,16 @@ class System(metaclass=ABCMeta):
 
     def run(self):
         # Console input
-        self.end_sim_time = int(input("실행할 시뮬레이션 시간을 입력하세요(정수): "))
-        verbose = int(input("상세 출력을 원하시면 1을 입력하세요: "))
-        if verbose == 1:
+        self.end_sim_time = int(input("시뮬레이션 시간: "))
+        if input("상세 출력(Y or N): ")=='Y':
             self.verbose = True
         else:
             self.verbose = False
 
         # Set input files
-        self.set_processor()
-        self.set_memory()
-        self.set_tasks()
+        InputUtils.set_processor(self)
+        InputUtils.set_memory(self)
+        InputUtils.set_tasks(self)
         self.setup_tasks()
 
         # Run simulator...
@@ -67,7 +66,7 @@ class System(metaclass=ABCMeta):
                     self.reassign_task(exec_task)
                 prev_exec_task = exec_task
 
-                print(f'{time}부터 {time+1}까지 {exec_task.no} 실행')
+                print(f'{time}부터 {time+1}까지 task {exec_task.no} 실행 (cpu_freq:{exec_task.cpu_frequency.wcet_scale}, memory_type:{exec_task.memory})')
 
                 # for a task (1 unit 실행)
                 wcet_scaled_cpu = 1/exec_task.cpu_frequency.wcet_scale
@@ -150,28 +149,6 @@ class System(metaclass=ABCMeta):
     def reassign_task(self, task) -> bool:
         pass
 
-    def set_processor(self, input_file="input_processor.txt"):
-        try:
-            with open(input_file, "r", encoding='UTF8') as f:
-                n_frequency = int(f.readline())
-                for i in range(n_frequency):
-                    temp = f.readline().split()
-                    self.CPU.insert_cpu_frequency(
-                        wcet_scale=float(temp[0]), power_active=float(temp[1]), power_idle=float(temp[2]))
-        except FileNotFoundError:
-            System.error("processor 설정 파일을 찾을 수 없습니다.")
-
-    def set_memory(self, input_file="input_mem.txt"):
-        try:
-            self.memories = Memories()
-            with open(input_file, "r", encoding='UTF8') as f:
-                for i in range(2):
-                    temp = f.readline().split()
-                    self.memories.insert_memory(memory_str=temp[0], capacity=int(temp[1]), wcet_scale=float(temp[2]),
-                                                power_active=float(temp[3]), power_idle=float(temp[4]))
-        except FileNotFoundError:
-            System.error("memory 정보 파일을 찾을 수 없습니다.")
-
     def get_tasks_ndet(self) -> float:
         result = 0.0
         for task in self.tasks:
@@ -200,18 +177,6 @@ class System(metaclass=ABCMeta):
             heapq.heappush(self.queue, (task.calc_priority(), task))
         return True
 
-    def set_tasks(self, input_file="input_tasks.txt"):
-        # 일단 tasks 에 순서대로 담기
-        try:
-            with open(input_file, "r", encoding='UTF8') as f:
-                n_task = int(f.readline())
-                for i in range(n_task):
-                    temp = f.readline().split()
-                    self.tasks.append(Task(wcet=int(temp[0]), period=int(temp[1]),
-                                      mem_req=int(temp[2]), mem_active_ratio=float(temp[3])))
-        except FileNotFoundError:
-            System.error("task 정보 파일을 찾을 수 없습니다.")
-
     def check_queued_tasks(self):
         for task in self.tasks:
             task.check_task()
@@ -226,6 +191,7 @@ class System(metaclass=ABCMeta):
         heapq.heapify(temp)
         self.queue = temp
 
+    @staticmethod
     def error(self, message: str):
         print(message)
         sys.exit()
@@ -265,7 +231,7 @@ class Hm(System):
     def reassign_task(self, task) -> bool:
         self.CPU.reassign_cpu_frequency(task, self)
 
-        Memories.revoke_memory(task)
+        task.revoke_memory()
 
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
@@ -311,12 +277,12 @@ class DvfsHm(System):
         return False
 
     def reassign_task(self, task) -> bool:
-        Memories.revoke_memory(task)
+        task.revoke_memory()
 
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
             if self.memories.assign_memory(task, mem_type):
                 if self.CPU.reassign_cpu_frequency(task, self):
                     return True
-                Memories.revoke_memory(task)
+                task.revoke_memory()
         return False

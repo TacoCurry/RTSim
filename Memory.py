@@ -55,11 +55,6 @@ class Memories:
             return True
         return False
 
-    @staticmethod
-    def revoke_memory(task):
-        task.memory.used_capacity -= task.memory_req
-        task.memory = None
-
     def init_memories(self):
         self.total_capacity = 0
         for memory in self.list:

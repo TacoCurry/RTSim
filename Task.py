@@ -58,3 +58,7 @@ class Task:
         if self.deadline < 0:
             raise Exception(self.desc_task() + ": negative deadline")
         return True
+
+    def revoke_memory(self):
+        self.memory.used_capacity -= self.memory_req
+        self.memory = None
