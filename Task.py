@@ -46,8 +46,8 @@ class Task:
         self.det_remain = self.det_remain_old
 
     def desc_task(self) -> str:
-        return (f'[no:{self.no}, wcet:{self.wcet}, period:{self.period} ' +
-                f'cpu_freq(scale):{self.cpu_frequency.wcet_scale}, memory:{self.memory.type} ' +
+        return (f'    [no:{self.no}, wcet:{self.wcet}, period:{self.period}, ' +
+                f'cpu_freq(scale):{self.cpu_frequency.wcet_scale}, memory:{self.memory.type}, ' +
                 f'det:{self.det}, det_remain:{self.det_remain}, deadline:{self.deadline}]')
 
     def check_task(self):

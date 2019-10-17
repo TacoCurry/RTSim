@@ -8,6 +8,9 @@ from Input import InputUtils
 
 class System(metaclass=ABCMeta):
     """super class of all POLICYs"""
+    V_NO = 0
+    V_SIMPLE = 1
+    V_DETAIL = 2
 
     def __init__(self):
         self.name = None
@@ -34,10 +37,7 @@ class System(metaclass=ABCMeta):
     def run(self):
         # Console input
         self.end_sim_time = int(input("시뮬레이션 시간: "))
-        if input("상세 출력(Y or N): ")=='Y':
-            self.verbose = True
-        else:
-            self.verbose = False
+        self.verbose = int(input("상세 출력(0:없음, 1:실행결과만, 2:자세히): "))
 
         # Set input files
         InputUtils.set_processor(self)
@@ -48,10 +48,10 @@ class System(metaclass=ABCMeta):
         # Run simulator...
         time = 0
         prev_exec_task = None
-        while time <= self.end_sim_time:
-            print(f'time = {time}')
-            if self.verbose:
-                print(self.print_queue())
+        while time < self.end_sim_time:
+            if self.verbose == System.V_DETAIL:
+                print(f'\ntime = {time}')
+                self.print_queue()
 
             if len(self.queue) == 0:
                 # for cpu
@@ -66,7 +66,10 @@ class System(metaclass=ABCMeta):
                     self.reassign_task(exec_task)
                 prev_exec_task = exec_task
 
-                print(f'{time}부터 {time+1}까지 task {exec_task.no} 실행 (cpu_freq:{exec_task.cpu_frequency.wcet_scale}, memory_type:{exec_task.memory})')
+                if self.verbose != System.V_NO:
+                    print(f'{time}부터 {time+1}까지 task {exec_task.no} 실행 '
+                          f'(cpu_freq:{exec_task.cpu_frequency.wcet_scale}, '
+                          f'memory_type:{exec_task.memory.get_type_str()})')
 
                 # for a task (1 unit 실행)
                 wcet_scaled_cpu = 1/exec_task.cpu_frequency.wcet_scale
@@ -134,12 +137,12 @@ class System(metaclass=ABCMeta):
         power_consumed_idle_avg = power_consumed_idle / time
         utilization = float(self.sum_utils) / self.n_utils * 100
 
-        print(f'policy: {self.name}')
-        print(f'simulation time elapsed: {time}')
+        print(f'\npolicy: {self.name}')
+        print(f'simulation time: {time}')
         print(f'average power consumed: {power_consumed_avg}')
         print(f'CPU + MEM power consumed: {power_consumed_cpu_avg} + {power_consumed_mem_avg}')
         print(f'ACTIVE + IDLE power consumed: {power_consumed_active_avg} + {power_consumed_idle_avg}')
-        print(f'utilzation: {utilization}%')
+        print(f'utilization: {utilization}%')
 
     @abstractmethod
     def assign_task(self, task) -> bool:
@@ -181,20 +184,21 @@ class System(metaclass=ABCMeta):
         for task in self.tasks:
             task.check_task()
 
-    def print_queue(self):
-        temp = []
-        while len(self.queue) > 0:
-            tup = heapq.heappop(self.queue)
-            str = tup[1].desc_task()
-            print(f'priority:{tup[0]} /{str}')
-            temp.append(tup)
-        heapq.heapify(temp)
-        self.queue = temp
-
     @staticmethod
     def error(self, message: str):
         print(message)
         sys.exit()
+
+    def print_queue(self):
+        temp = []
+        print("-----------queue------------")
+        while len(self.queue) > 0:
+            tup = heapq.heappop(self.queue)
+            print(tup[1].desc_task())
+            temp.append(tup)
+        print("---------queue end-----------")
+        heapq.heapify(temp)
+        self.queue = temp
 
 
 class Dram(System):

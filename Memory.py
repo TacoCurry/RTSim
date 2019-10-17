@@ -11,6 +11,14 @@ class Memory:
         self.power_idle = power_idle
         self.used_capacity = 0
 
+    def get_type_str(self) -> str:
+        if self.type == Memory.TYPE_DRAM:
+            return "DRAM"
+        elif self.type == Memory.TYPE_NONE:
+            return "None"
+        else:
+            return "LPM"
+
 
 class LPM(Memory):
     def __init__(self, capacity, wcet_scale, power_active, power_idle):
