@@ -12,6 +12,6 @@ def get_system(policy_num: int) -> System:
         return DvfsHm()
 
 
-get_system(int(input("Policy를 선택하세요.\n[1]DRAM, [2]HM. [3]DVFS_DRAM, [4]DVFS_HM : "))).run()
+get_system(int(input("[1]DRAM, [2]HM. [3]DVFS_DRAM, [4]DVFS_HM : "))).run()
 
 

@@ -1,12 +1,16 @@
 from abc import *
 from CPU import NoneDVFSCPU, DVFSCPU
-from Memory import Memory, Memories
+from Memory import Memory
 import heapq
-from Task import Task
+import sys
+from Input import InputUtils
 
 
 class System(metaclass=ABCMeta):
     """super class of all POLICYs"""
+    V_NO = 0
+    V_SIMPLE = 1
+    V_DETAIL = 2
 
     def __init__(self):
         self.name = None
@@ -15,82 +19,61 @@ class System(metaclass=ABCMeta):
         self.CPU = None
         self.memories = None
 
+        self.time = 0
         self.end_sim_time = None
         self.verbose = None
 
         self.tasks = []
-        self.wait = []
+        self.wait_period_queue = []
         self.queue = []
 
         self.sum_utils = 0
         self.n_utils = 0
 
-        self.power_consumed_cpu_active = 0
-        self.power_consumed_mem_active = 0
-        self.power_consumed_cpu_idle = 0
-        self.power_consumed_mem_idle = 0
-
     def run(self):
         # Console input
-        self.end_sim_time = int(input("실행할 시뮬레이션 시간을 입력하세요(정수): "))
-        verbose = int(input("상세 출력을 원하시면 1을 입력하세요: "))
-        if verbose == 1:
-            self.verbose = True
-        else:
-            self.verbose = False
+        self.end_sim_time = int(input("시뮬레이션 시간: "))
+        self.verbose = int(input("상세 출력(0:없음, 1:실행결과만, 2:자세히): "))
 
         # Set input files
-        self.set_processor()
-        self.set_memory()
-        self.set_tasks()
+        InputUtils.set_processor(self)
+        InputUtils.set_memory(self)
+        InputUtils.set_tasks(self)
         self.setup_tasks()
 
         # Run simulator...
-        time = 0
         prev_exec_task = None
-        while time <= self.end_sim_time:
-            print(f'time = {time}')
-            if self.verbose:
-                print(self.print_queue())
+        while self.time < self.end_sim_time:
+            if self.verbose == System.V_DETAIL:
+                print(f'\ntime = {self.time}')
+                self.print_queue()
 
             if len(self.queue) == 0:
-                # for cpu
-                self.power_consumed_cpu_idle += self.CPU.cpufreqs[-1].power_idle
-                # for mem
-                for task in self.tasks:
-                    self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
-
+                self.CPU.exec_idle(time=1)
+                for item in self.wait_period_queue:
+                    item[1].exec_idle(time=1, update_deadline=False)
             else:
-                exec_task = heapq.heappop(self.queue)[1]
+                exec_task = self.pop_queue()
                 if prev_exec_task != exec_task:
                     self.reassign_task(exec_task)
                 prev_exec_task = exec_task
 
-                print(f'{time}부터 {time+1}까지 {exec_task.no} 실행')
+                if self.verbose != System.V_NO:
+                    print(f'{self.time}부터 {self.time+1}까지 task {exec_task.no} 실행 '
+                          f'(cpu_freq:{exec_task.cpu_frequency.wcet_scale}, '
+                          f'memory_type:{exec_task.memory.get_type_str()})')
 
                 # for a task (1 unit 실행)
-                wcet_scaled_cpu = 1/exec_task.cpu_frequency.wcet_scale
-                wcet_scaled_mem = 1/exec_task.memory.wcet_scale
-                wcet_scaled = wcet_scaled_cpu + wcet_scaled_mem
-                self.power_consumed_cpu_active += exec_task.cpu_frequency.power_active * wcet_scaled_cpu / wcet_scaled
-                self.power_consumed_cpu_idle += exec_task.cpu_frequency.power_idle * wcet_scaled_mem / wcet_scaled
-                self.power_consumed_mem_active += \
-                    exec_task.memory.power_active * exec_task.memory_req * exec_task.memory_active_ratio
-                self.power_consumed_mem_idle += \
-                    exec_task.memory.power_idle * exec_task.memory_req * (1 - exec_task.memory_active_ratio)
-                exec_task.deadline -= 1
-                exec_task.det_remain -= 1
+                exec_task.exec_active(time=1)
 
                 # for other tasks (전력 소모 계산 및 1초 흐르기)
                 for i in range(len(self.queue)):
                     task = self.queue[i][1]
-                    task.deadline -= 1
+                    task.exec_idle(time=1, update_deadline=True)
                     self.queue[i] = (task.calc_priority(), task)
-                    self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
                 heapq.heapify(self.queue)  # 재정렬 필요
-                for tup in self.wait:
-                    task = tup[1]
-                    self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
+                for tup in self.wait_period_queue:
+                    tup[1].exec_idle(time=1, update_deadline=False)
 
                 self.add_utilization()
                 self.check_queued_tasks()
@@ -100,46 +83,62 @@ class System(metaclass=ABCMeta):
                     exec_task.period_start += exec_task.period
                     exec_task.det_remain = exec_task.det
                     exec_task.deadline = exec_task.period
-                    heapq.heappush(self.wait, (exec_task.period_start, exec_task))
+                    self.push_wait_period_queue(exec_task)
                 else:
-                    heapq.heappush(self.queue, (exec_task.calc_priority(), exec_task))
+                    self.push_queue(exec_task)
 
-            # 타임 1더하고 wait중에 타임이랑 같은 건 큐로 넣어줌,
-            time += 1
+            self.time += 1
+            self.check_wait_period_queue()
 
-            while len(self.wait) != 0:
-                if self.wait[0][0] > time:
-                    break
-                task = heapq.heappop(self.wait)[1]
-                heapq.heappush(self.queue, (task.calc_priority(), task))
+        self.result_print()
 
-        time -= 1
-        self.result_print(time)
+    def push_wait_period_queue(self, task):
+        heapq.heappush(self.wait_period_queue, (task.period_start, task))
+
+    def push_queue(self, task):
+        heapq.heappush(self.queue, (task.calc_priority(), task))
+
+    def pop_wait_period_queue(self):
+        return heapq.heappop(self.wait_period_queue)[1]
+
+    def pop_queue(self):
+        return heapq.heappop(self.queue)[1]
+
+    def check_wait_period_queue(self):
+        # wait_queue 에 있는 task 중 새 주기가 시작되는 태스크를 queue로 이동.
+        while len(self.wait_period_queue) != 0:
+            if self.wait_period_queue[0][0] > self.time:
+                break
+            task = heapq.heappop(self.wait_period_queue)[1]
+            self.push_queue(task)
 
     def add_utilization(self):
         self.sum_utils += self.get_tasks_ndet()
         self.n_utils += 1
 
-    def result_print(self, time: int):
-        power_consumed_cpu = self.power_consumed_cpu_active + self.power_consumed_cpu_idle
-        power_consumed_mem = self.power_consumed_mem_active + self.power_consumed_mem_idle
-        power_consumed_active = self.power_consumed_cpu_active + self.power_consumed_mem_active
-        power_consumed_idle = self.power_consumed_cpu_idle + self.power_consumed_mem_idle
+    def result_print(self):
+        self.memories.calc_total_power_consumed()
+
+        power_consumed_cpu = self.CPU.power_consumed_active + self.CPU.power_consumed_idle
+        power_consumed_mem = self.memories.total_power_consumed_active + self.memories.total_power_consumed_idle
+        power_consumed_active = self.CPU.power_consumed_active + self.memories.total_power_consumed_active
+        power_consumed_idle = self.CPU.power_consumed_idle + self.memories.total_power_consumed_active
         power_consumed = power_consumed_cpu + power_consumed_mem
 
-        power_consumed_avg = power_consumed / time
-        power_consumed_cpu_avg = power_consumed_cpu / time
-        power_consumed_mem_avg = power_consumed_mem / time
-        power_consumed_active_avg = power_consumed_active / time
-        power_consumed_idle_avg = power_consumed_idle / time
+        power_consumed_avg = power_consumed / self.time
+        power_consumed_cpu_avg = power_consumed_cpu / self.time
+        power_consumed_mem_avg = power_consumed_mem / self.time
+        power_consumed_active_avg = power_consumed_active / self.time
+        power_consumed_idle_avg = power_consumed_idle / self.time
         utilization = float(self.sum_utils) / self.n_utils * 100
 
-        print(f'policy: {self.name}')
-        print(f'simulation time elapsed: {time}')
-        print(f'average power consumed: {power_consumed_avg}')
-        print(f'CPU + MEM power consumed: {power_consumed_cpu_avg} + {power_consumed_mem_avg}')
-        print(f'ACTIVE + IDLE power consumed: {power_consumed_active_avg} + {power_consumed_idle_avg}')
-        print(f'utilzation: {utilization}%')
+        print(f'\npolicy: {self.name}')
+        print(f'simulation time: {self.time}')
+        print(f'average power consumed: {round(power_consumed_avg, 3)}')
+        print(f'CPU + MEM power consumed: {round(power_consumed_cpu_avg, 3)} + {round(power_consumed_mem_avg, 3)}')
+        print(f'ACTIVE + IDLE power consumed: '
+              f'{round(power_consumed_active_avg, 3)} + {round(power_consumed_idle_avg, 3)}')
+        print(f'utilization: {round(utilization, 3)}%')
 
     @abstractmethod
     def assign_task(self, task) -> bool:
@@ -149,32 +148,10 @@ class System(metaclass=ABCMeta):
     def reassign_task(self, task) -> bool:
         pass
 
-    def set_processor(self, input_file="input_processor.txt"):
-        try:
-            with open(input_file, "r", encoding='UTF8') as f:
-                n_frequency = int(f.readline())
-                for i in range(n_frequency):
-                    temp = f.readline().split()
-                    self.CPU.insert_cpufreq(
-                        wcet_scale=float(temp[0]), power_active=float(temp[1]), power_idle=float(temp[2]))
-        except FileNotFoundError:
-            System.error("processor 설정 파일을 찾을 수 없습니다.")
-
-    def set_memory(self, input_file="input_mem.txt"):
-        try:
-            self.memories = Memories()
-            with open(input_file, "r", encoding='UTF8') as f:
-                for i in range(2):
-                    temp = f.readline().split()
-                    self.memories.insert_memory(memory_str=temp[0], capacity=int(temp[1]), wcet_scale=float(temp[2]),
-                                                power_active=float(temp[3]), power_idle=float(temp[4]))
-        except FileNotFoundError:
-            System.error("memory 정보 파일을 찾을 수 없습니다.")
-
     def get_tasks_ndet(self) -> float:
         result = 0.0
         for task in self.tasks:
-                result += float(task.det) / task.period
+            result += float(task.det) / task.period
         return result
 
     def get_tasks_ndet_except(self, task_except) -> float:
@@ -196,32 +173,26 @@ class System(metaclass=ABCMeta):
             task.calc_det()
             if not self.is_schedule(task):
                 raise Exception(task.no + ": unschedule task")
-            heapq.heappush(self.queue, (task.calc_priority(), task))
+            self.push_queue(task)
         return True
-
-    def set_tasks(self, input_file="input_tasks.txt"):
-        # 일단 tasks 에 순서대로 담기
-        try:
-            with open(input_file, "r", encoding='UTF8') as f:
-                n_task = int(f.readline())
-                for i in range(n_task):
-                    temp = f.readline().split()
-                    self.tasks.append(Task(wcet=int(temp[0]), period=int(temp[1]),
-                                      mem_req=int(temp[2]), mem_active_ratio=float(temp[3])))
-        except FileNotFoundError:
-            System.error("task 정보 파일을 찾을 수 없습니다.")
 
     def check_queued_tasks(self):
         for task in self.tasks:
             task.check_task()
 
+    @staticmethod
+    def error(self, message: str):
+        print(message)
+        sys.exit()
+
     def print_queue(self):
         temp = []
+        print("-----------queue------------")
         while len(self.queue) > 0:
             tup = heapq.heappop(self.queue)
-            str = tup[1].desc_task()
-            print(f'priority:{tup[0]} /{str}')
+            print(tup[1].desc_task())
             temp.append(tup)
+        print("---------queue end-----------")
         heapq.heapify(temp)
         self.queue = temp
 
@@ -234,11 +205,11 @@ class Dram(System):
         self.CPU = NoneDVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
         return self.memories.assign_memory(task, Memory.TYPE_DRAM)
 
     def reassign_task(self, task) -> bool:
-        return self.CPU.reassign_cpufreq(task, self)
+        return self.CPU.reassign_cpu_frequency(task, self)
 
 
 class Hm(System):
@@ -249,7 +220,7 @@ class Hm(System):
         self.CPU = NoneDVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
 
         mem_types = [Memory.TYPE_DRAM, Memory.TYPE_LPM]
         for mem_type in mem_types:
@@ -258,9 +229,9 @@ class Hm(System):
         return False
 
     def reassign_task(self, task) -> bool:
-        self.CPU.reassign_cpufreq(task, self)
+        self.CPU.reassign_cpu_frequency(task, self)
 
-        Memories.revoke_memory(task)
+        task.revoke_memory()
 
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
@@ -280,13 +251,13 @@ class DvfsDram(System):
         self.CPU = DVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
         if not self.memories.assign_memory(task, Memory.TYPE_DRAM):
             return False
         return True
 
     def reassign_task(self, task) -> bool:
-        return self.CPU.reassign_cpufreq(task, self)
+        return self.CPU.reassign_cpu_frequency(task, self)
 
 
 class DvfsHm(System):
@@ -297,7 +268,7 @@ class DvfsHm(System):
         self.CPU = DVFSCPU()
 
     def assign_task(self, task) -> bool:
-        self.CPU.assign_cpufreq(task)
+        self.CPU.assign_cpu_frequency(task)
 
         mem_types = [Memory.TYPE_DRAM, Memory.TYPE_LPM]
         for mem_type in mem_types:
@@ -306,12 +277,12 @@ class DvfsHm(System):
         return False
 
     def reassign_task(self, task) -> bool:
-        Memories.revoke_memory(task)
+        task.revoke_memory()
 
         mem_types = [Memory.TYPE_LPM, Memory.TYPE_DRAM]
         for mem_type in mem_types:
             if self.memories.assign_memory(task, mem_type):
-                if self.CPU.reassign_cpufreq(task, self):
+                if self.CPU.reassign_cpu_frequency(task, self):
                     return True
-                Memories.revoke_memory(task)
+                task.revoke_memory()
         return False

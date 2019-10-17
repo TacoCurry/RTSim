@@ -11,6 +11,23 @@ class Memory:
         self.power_idle = power_idle
         self.used_capacity = 0
 
+        self.power_consumed_idle = 0
+        self.power_consumed_active = 0
+
+    def get_type_str(self) -> str:
+        if self.type == Memory.TYPE_DRAM:
+            return "DRAM"
+        elif self.type == Memory.TYPE_NONE:
+            return "None"
+        else:
+            return "LPM"
+
+    def add_power_consumed_idle(self, power: float):
+        self.power_consumed_idle += power
+
+    def add_power_consumed_active(self, power: float):
+        self.power_consumed_active += power
+
 
 class LPM(Memory):
     def __init__(self, capacity, wcet_scale, power_active, power_idle):
@@ -29,6 +46,9 @@ class Memories:
         self.list = []
         self.n_mem_types = 0
         self.total_capacity = 0
+
+        self.total_power_consumed_active = None
+        self.total_power_consumed_idle = None
 
     def get_memory(self, memory_type):
         for memory in self.list:
@@ -55,13 +75,24 @@ class Memories:
             return True
         return False
 
-    @staticmethod
-    def revoke_memory(task):
-        task.memory.used_capacity -= task.memory_req
-        task.memory = None
-
     def init_memories(self):
         self.total_capacity = 0
         for memory in self.list:
             memory.used_capacity = 0
             self.total_capacity += memory.capacity
+
+    def calc_total_power_consumed(self):
+        self.total_power_consumed_active = self.get_total_power_consumed_active()
+        self.total_power_consumed_idle = self.get_total_power_consumed_idle()
+
+    def get_total_power_consumed_active(self):
+        result = 0.0
+        for memory in self.list:
+            result += memory.power_consumed_active
+        return result
+
+    def get_total_power_consumed_idle(self):
+        result = 0.0
+        for memory in self.list:
+            result += memory.power_consumed_idle
+        return result
