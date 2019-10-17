@@ -19,11 +19,12 @@ class System(metaclass=ABCMeta):
         self.CPU = None
         self.memories = None
 
+        self.time = 0
         self.end_sim_time = None
         self.verbose = None
 
         self.tasks = []
-        self.wait = []
+        self.wait_period_queue = []
         self.queue = []
 
         self.sum_utils = 0
@@ -46,11 +47,10 @@ class System(metaclass=ABCMeta):
         self.setup_tasks()
 
         # Run simulator...
-        time = 0
         prev_exec_task = None
-        while time < self.end_sim_time:
+        while self.time < self.end_sim_time:
             if self.verbose == System.V_DETAIL:
-                print(f'\ntime = {time}')
+                print(f'\ntime = {self.time}')
                 self.print_queue()
 
             if len(self.queue) == 0:
@@ -67,7 +67,7 @@ class System(metaclass=ABCMeta):
                 prev_exec_task = exec_task
 
                 if self.verbose != System.V_NO:
-                    print(f'{time}부터 {time+1}까지 task {exec_task.no} 실행 '
+                    print(f'{self.time}부터 {self.time+1}까지 task {exec_task.no} 실행 '
                           f'(cpu_freq:{exec_task.cpu_frequency.wcet_scale}, '
                           f'memory_type:{exec_task.memory.get_type_str()})')
 
@@ -91,7 +91,7 @@ class System(metaclass=ABCMeta):
                     self.queue[i] = (task.calc_priority(), task)
                     self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
                 heapq.heapify(self.queue)  # 재정렬 필요
-                for tup in self.wait:
+                for tup in self.wait_period_queue:
                     task = tup[1]
                     self.power_consumed_mem_idle += task.memory_req * task.memory.power_idle
 
@@ -103,21 +103,28 @@ class System(metaclass=ABCMeta):
                     exec_task.period_start += exec_task.period
                     exec_task.det_remain = exec_task.det
                     exec_task.deadline = exec_task.period
-                    heapq.heappush(self.wait, (exec_task.period_start, exec_task))
+                    self.push_wait_period_queue(exec_task)
                 else:
-                    heapq.heappush(self.queue, (exec_task.calc_priority(), exec_task))
+                    self.push_queue(exec_task)
 
-            # 타임 1더하고 wait중에 타임이랑 같은 건 큐로 넣어줌,
-            time += 1
+            self.time += 1
+            self.check_wait_queue()
 
-            while len(self.wait) != 0:
-                if self.wait[0][0] > time:
-                    break
-                task = heapq.heappop(self.wait)[1]
-                heapq.heappush(self.queue, (task.calc_priority(), task))
+        self.result_print(self.time - 1)
 
-        time -= 1
-        self.result_print(time)
+    def push_wait_period_queue(self, task):
+        heapq.heappush(self.wait_period_queue, (task.period_start, task))
+
+    def push_queue(self, task):
+        heapq.heappush(self.queue, (task.calc_priority(), task))
+
+    def check_wait_queue(self):
+        # wait_queue 에 있는 task 중 새 주기가 시작되는 태스크를 queue로 이동.
+        while len(self.wait_period_queue) != 0:
+            if self.wait_period_queue[0][0] > self.time:
+                break
+            task = heapq.heappop(self.wait_period_queue)[1]
+            self.push_queue(task)
 
     def add_utilization(self):
         self.sum_utils += self.get_tasks_ndet()
@@ -177,7 +184,7 @@ class System(metaclass=ABCMeta):
             task.calc_det()
             if not self.is_schedule(task):
                 raise Exception(task.no + ": unschedule task")
-            heapq.heappush(self.queue, (task.calc_priority(), task))
+            self.push_queue(task)
         return True
 
     def check_queued_tasks(self):
