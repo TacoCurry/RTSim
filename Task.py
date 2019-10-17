@@ -1,7 +1,7 @@
 class Task:
     n_task = 0
 
-    def __init__(self, wcet, period, mem_req, mem_active_ratio):
+    def __init__(self, wcet, period, mem_req, mem_active_ratio, cpu):
         self.wcet = wcet
         self.period = self.deadline = period
         self.memory_req = mem_req
@@ -10,6 +10,7 @@ class Task:
         Task.n_task = Task.n_task + 1
         self.no = Task.n_task
 
+        self.cpu = cpu
         self.cpu_frequency = None
         self.memory = None
 
@@ -62,3 +63,23 @@ class Task:
     def revoke_memory(self):
         self.memory.used_capacity -= self.memory_req
         self.memory = None
+
+    def exec_idle(self, time: int, update_deadline: bool):
+        self.memory.power_consumed_idle += time * self.memory_req * self.memory.power_idle
+        if update_deadline:
+            self.deadline -= 1
+
+    def exec_active(self, time: int):
+        wcet_scaled_cpu = 1 / self.cpu_frequency.wcet_scale
+        wcet_scaled_mem = 1 / self.memory.wcet_scale
+        wcet_scaled = wcet_scaled_cpu + wcet_scaled_mem
+
+        self.cpu.add_power_consumed_active(time * self.cpu_frequency.power_active * wcet_scaled_cpu / wcet_scaled)
+        self.cpu.add_power_consumed_idle(time * self.cpu_frequency.power_idle * wcet_scaled_mem / wcet_scaled)
+        self.memory.add_power_consumed_active(
+            time * self.memory.power_active * self.memory_req * self.memory_active_ratio)
+        self.memory.add_power_consumed_idle(
+            time * self.memory.power_idle * self.memory_req * (1 - self.memory_active_ratio))
+
+        self.deadline -= time
+        self.det_remain -= time

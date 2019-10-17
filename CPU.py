@@ -18,6 +18,9 @@ class CPU(metaclass=ABCMeta):
         self.frequencies = []
         self.n_frequencies = 0
 
+        self.power_consumed_idle = 0
+        self.power_consumed_active = 0
+
     def insert_cpu_frequency(self, wcet_scale: float, power_active: float, power_idle: float) -> bool:
         if self.n_frequencies >= CPU.MAX_CPU_FREQUENCIES:
             return False
@@ -35,6 +38,15 @@ class CPU(metaclass=ABCMeta):
     @abstractmethod
     def reassign_cpu_frequency(self, task, system) -> bool:
         pass
+
+    def exec_idle(self, time: int):
+        self.power_consumed_idle += time * self.frequencies[-1].power_idle
+
+    def add_power_consumed_idle(self, power: float):
+        self.power_consumed_idle += power
+
+    def add_power_consumed_active(self, power: float):
+        self.power_consumed_active += power
 
 
 class NoneDVFSCPU(CPU):
