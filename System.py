@@ -4,6 +4,7 @@ from Memory import Memory
 import heapq
 import sys
 from Input import InputUtils
+from Report import Report
 
 
 class System(metaclass=ABCMeta):
@@ -12,7 +13,7 @@ class System(metaclass=ABCMeta):
     V_SIMPLE = 1
     V_DETAIL = 2
 
-    def __init__(self):
+    def __init__(self, end_sim_time: int, verbose: int):
         self.name = None
         self.desc = None
 
@@ -20,8 +21,8 @@ class System(metaclass=ABCMeta):
         self.memories = None
 
         self.time = 0
-        self.end_sim_time = None
-        self.verbose = None
+        self.end_sim_time = end_sim_time
+        self.verbose = verbose
 
         self.tasks = []
         self.wait_period_queue = []
@@ -31,10 +32,6 @@ class System(metaclass=ABCMeta):
         self.n_utils = 0
 
     def run(self):
-        # Console input
-        self.end_sim_time = int(input("시뮬레이션 시간: "))
-        self.verbose = int(input("상세 출력(0:없음, 1:실행결과만, 2:자세히): "))
-
         # Set input files
         InputUtils.set_processor(self)
         InputUtils.set_memory(self)
@@ -90,7 +87,9 @@ class System(metaclass=ABCMeta):
             self.time += 1
             self.check_wait_period_queue()
 
-        self.result_print()
+        report = Report(self)
+        report.print_console()
+        return report
 
     def push_wait_period_queue(self, task):
         heapq.heappush(self.wait_period_queue, (task.period_start, task))
@@ -115,30 +114,6 @@ class System(metaclass=ABCMeta):
     def add_utilization(self):
         self.sum_utils += self.get_tasks_ndet()
         self.n_utils += 1
-
-    def result_print(self):
-        self.memories.calc_total_power_consumed()
-
-        power_consumed_cpu = self.CPU.power_consumed_active + self.CPU.power_consumed_idle
-        power_consumed_mem = self.memories.total_power_consumed_active + self.memories.total_power_consumed_idle
-        power_consumed_active = self.CPU.power_consumed_active + self.memories.total_power_consumed_active
-        power_consumed_idle = self.CPU.power_consumed_idle + self.memories.total_power_consumed_active
-        power_consumed = power_consumed_cpu + power_consumed_mem
-
-        power_consumed_avg = power_consumed / self.time
-        power_consumed_cpu_avg = power_consumed_cpu / self.time
-        power_consumed_mem_avg = power_consumed_mem / self.time
-        power_consumed_active_avg = power_consumed_active / self.time
-        power_consumed_idle_avg = power_consumed_idle / self.time
-        utilization = float(self.sum_utils) / self.n_utils * 100
-
-        print(f'\npolicy: {self.name}')
-        print(f'simulation time: {self.time}')
-        print(f'average power consumed: {round(power_consumed_avg, 3)}')
-        print(f'CPU + MEM power consumed: {round(power_consumed_cpu_avg, 3)} + {round(power_consumed_mem_avg, 3)}')
-        print(f'ACTIVE + IDLE power consumed: '
-              f'{round(power_consumed_active_avg, 3)} + {round(power_consumed_idle_avg, 3)}')
-        print(f'utilization: {round(utilization, 3)}%')
 
     @abstractmethod
     def assign_task(self, task) -> bool:
@@ -198,8 +173,8 @@ class System(metaclass=ABCMeta):
 
 
 class Dram(System):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, end_sim_time: int, verbose: int):
+        super().__init__(end_sim_time, verbose)
         self.name = "DRAM"
         self.desc = "No DVFS with dram(dram)"
         self.CPU = NoneDVFSCPU()
@@ -213,8 +188,8 @@ class Dram(System):
 
 
 class Hm(System):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, end_sim_time: int, verbose: int):
+        super().__init__(end_sim_time, verbose)
         self.name = "HM"
         self.desc = "Hybrid memory(hm)"
         self.CPU = NoneDVFSCPU()
@@ -244,8 +219,8 @@ class Hm(System):
 
 
 class DvfsDram(System):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, end_sim_time: int, verbose: int):
+        super().__init__(end_sim_time, verbose)
         self.name = "DVFS_DRAM"
         self.desc = "DVFS with dram(dvfs-dram)"
         self.CPU = DVFSCPU()
@@ -261,8 +236,8 @@ class DvfsDram(System):
 
 
 class DvfsHm(System):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, end_sim_time: int, verbose: int):
+        super().__init__(end_sim_time, verbose)
         self.name = "DVFS_HM"
         self.desc = "DVFS with hybrid memory(dvs-hm)"
         self.CPU = DVFSCPU()
