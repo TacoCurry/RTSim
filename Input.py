@@ -7,7 +7,7 @@ class InputUtils:
     def set_processor(system, input_file="input_processor.txt"):
         try:
             with open(input_file, "r", encoding='UTF8') as f:
-                n_core = int(f.readline())
+                system.CPU.n_core = int(f.readline())
                 n_frequency = int(f.readline())
                 for i in range(n_frequency):
                     temp = f.readline().split()

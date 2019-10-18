@@ -39,43 +39,44 @@ class System(metaclass=ABCMeta):
         self.setup_tasks()
 
         # Run simulator...
-        prev_exec_task = None
         while self.time < self.end_sim_time:
             if self.verbose == System.V_DETAIL:
                 print(f'\ntime = {self.time}')
                 self.print_queue()
 
-            if len(self.queue) == 0:
-                self.CPU.exec_idle(time=1)
-                for item in self.wait_period_queue:
-                    item[1].exec_idle(time=1, update_deadline=False)
+            # time 부터 (time+1)동안 실행될 task 코어의 개수만큼 고르기.
+            exec_task_list = []
+            if len(self.queue) < self.CPU.n_core:
+                # 큐에 있는 것 모두 실행가능(코어의 개수보다 적으므로)
+                temp = exec_task_list
+                exec_task_list = self.queue
+                self.queue = exec_task_list
+
+                # self.CPU.n_core - len(self.queue)개의 코어는 idle로 실행
+                for i in range(self.CPU.n_core - len(self.queue)):
+                    self.CPU.exec_idle(time=1)
             else:
-                exec_task = self.pop_queue()
-                if prev_exec_task != exec_task:
-                    self.reassign_task(exec_task)
-                prev_exec_task = exec_task
+                for i in range(self.CPU.n_core):
+                    exec_task_list.append(self.pop_queue())
 
-                if self.verbose != System.V_NO:
-                    print(f'{self.time}부터 {self.time+1}까지 task {exec_task.no} 실행 '
-                          f'(cpu_freq:{exec_task.cpu_frequency.wcet_scale}, '
-                          f'memory_type:{exec_task.memory.get_type_str()})')
+            # for active tasks (1 unit 실행)
+            for exec_task in exec_task_list:
+                exec_task.exec_active(system=self, time=1)
 
-                # for a task (1 unit 실행)
-                exec_task.exec_active(time=1)
+            # for other idle tasks (전력 소모 계산 및 1초 흐르기)
+            for i in range(len(self.queue)):
+                task = self.queue[i][1]
+                task.exec_idle(time=1, update_deadline=True)
+                self.queue[i] = (task.calc_priority(), task)
+            heapq.heapify(self.queue)  # 재정렬 필요
+            for tup in self.wait_period_queue:
+                tup[1].exec_idle(time=1, update_deadline=False)
 
-                # for other tasks (전력 소모 계산 및 1초 흐르기)
-                for i in range(len(self.queue)):
-                    task = self.queue[i][1]
-                    task.exec_idle(time=1, update_deadline=True)
-                    self.queue[i] = (task.calc_priority(), task)
-                heapq.heapify(self.queue)  # 재정렬 필요
-                for tup in self.wait_period_queue:
-                    tup[1].exec_idle(time=1, update_deadline=False)
+            self.add_utilization()
+            self.check_queued_tasks()
 
-                self.add_utilization()
-                self.check_queued_tasks()
-
-                # task 주기 끝났는지 확인해서 끝났으면 초기화 시키고 wait으로
+            # 실행된 task의 주기 끝났는지 확인해서 끝났으면 초기화 시키고 wait으로
+            for exec_task in exec_task_list:
                 if exec_task.det_remain == 0:
                     exec_task.period_start += exec_task.period
                     exec_task.det_remain = exec_task.det
@@ -137,7 +138,7 @@ class System(metaclass=ABCMeta):
         return result
 
     def is_schedule(self, task) -> bool:
-        if self.get_tasks_ndet_except(task) + (task.det * 1.0 / task.period) <= 1:
+        if self.get_tasks_ndet_except(task) + (task.det * 1.0 / task.period) <= self.CPU.n_core:
             return True
         return False
 

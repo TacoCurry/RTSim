@@ -15,6 +15,8 @@ class CPU(metaclass=ABCMeta):
     MAX_CPU_FREQUENCIES = 15
 
     def __init__(self):
+        self.n_core = None
+
         self.frequencies = []
         self.n_frequencies = 0
 
