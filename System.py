@@ -48,9 +48,9 @@ class System(metaclass=ABCMeta):
             exec_task_list = []
             if len(self.queue) < self.CPU.n_core:
                 # 큐에 있는 것 모두 실행가능(코어의 개수보다 적으므로)
-                temp = exec_task_list
-                exec_task_list = self.queue
-                self.queue = exec_task_list
+                for tup in self.queue:
+                    exec_task_list.append(tup[1])
+                self.queue = []
 
                 # self.CPU.n_core - len(self.queue)개의 코어는 idle로 실행
                 for i in range(self.CPU.n_core - len(self.queue)):

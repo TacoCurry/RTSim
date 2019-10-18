@@ -36,7 +36,7 @@ class InputUtils:
                 n_task = int(f.readline())
                 for i in range(n_task):
                     temp = f.readline().split()
-                    system.tasks.append(Task(wcet=int(temp[0]), period=int(temp[1]),
+                    system.tasks.append(Task(no=i+1, wcet=int(temp[0]), period=int(temp[1]),
                                              mem_req=int(temp[2]), mem_active_ratio=float(temp[3]), cpu=system.CPU))
         except FileNotFoundError:
             system.error("task 정보 파일을 찾을 수 없습니다.")

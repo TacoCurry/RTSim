@@ -1,14 +1,10 @@
 class Task:
-    n_task = 0
-
-    def __init__(self, wcet, period, mem_req, mem_active_ratio, cpu):
+    def __init__(self, no: int, wcet, period, mem_req, mem_active_ratio, cpu):
         self.wcet = wcet
         self.period = self.deadline = period
         self.memory_req = mem_req
         self.memory_active_ratio = mem_active_ratio
-
-        Task.n_task = Task.n_task + 1
-        self.no = Task.n_task
+        self.no = no
 
         self.cpu = cpu
         self.cpu_frequency = None
