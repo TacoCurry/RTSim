@@ -67,7 +67,9 @@ class Task:
             self.deadline -= 1
 
     def exec_active(self, time: int, system):
-        if self.prev_exec_time != system.time - 1:
+        if not self.prev_exec_time:
+            pass
+        elif self.prev_exec_time != system.time - 1:
             # 새로 수행되는 태스크일 때만 cpu와 메모리 다시 할당
             system.reassign_task(self)
 

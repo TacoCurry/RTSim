@@ -73,7 +73,6 @@ class System(metaclass=ABCMeta):
                 tup[1].exec_idle(time=1, update_deadline=False)
 
             self.add_utilization()
-            self.check_queued_tasks()
 
             # 실행된 task의 주기 끝났는지 확인해서 끝났으면 초기화 시키고 wait으로
             for exec_task in exec_task_list:
@@ -85,6 +84,7 @@ class System(metaclass=ABCMeta):
                 else:
                     self.push_queue(exec_task)
 
+            self.check_queued_tasks()
             self.time += 1
             self.check_wait_period_queue()
 
