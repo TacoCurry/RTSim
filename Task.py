@@ -89,6 +89,6 @@ class Task:
 
         # print
         if system.verbose != system.V_NO:
-            print(f'{system.time}부터 {system.time + 1}까지 task {self.no} 실행 '
+            print(f'task {self.no} 실행 '
                   f'(cpu_freq:{self.cpu_frequency.wcet_scale}, '
                   f'memory_type:{self.memory.get_type_str()})')

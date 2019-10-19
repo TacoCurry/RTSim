@@ -60,6 +60,8 @@ class System(metaclass=ABCMeta):
                     exec_task_list.append(self.pop_queue())
 
             # for active tasks (1 unit 실행)
+            if self.verbose != System.V_NO:
+                print(f'{self.time}부터 {self.time + 1}까지')
             for exec_task in exec_task_list:
                 exec_task.exec_active(system=self, time=1)
 
