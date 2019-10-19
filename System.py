@@ -82,6 +82,7 @@ class System(metaclass=ABCMeta):
                     exec_task.period_start += exec_task.period
                     exec_task.det_remain = exec_task.det
                     exec_task.deadline = exec_task.period
+                    exec_task.prev_exec_time = None
                     self.push_wait_period_queue(exec_task)
                 else:
                     self.push_queue(exec_task)
