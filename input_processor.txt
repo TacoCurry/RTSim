@@ -5,4 +5,4 @@
 
 # 첫 번째 줄은 core의 개수
 # 두 번째 줄은 frequency 모드의 개수
-# 세 번째 줄 부터는 은 각 freq의 일률, active 전력소모량, idle 전력소모량
+# 세 번째 줄 부터는 각 freq의 일률, active 전력소모량, idle 전력소모량
