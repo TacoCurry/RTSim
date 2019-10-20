@@ -1,0 +1,26 @@
+@startuml
+
+title POLICY 1 : DRAM
+"main()" -> Dram : Dram 객체를 생성한다.
+"main()" -> System: 시뮬레이션 진행 함수 run()
+"run()" -> Input: set_processor, set_memory, set_task
+"run()" -> System: setup_tasks()
+System -> "run()" : push_queue(task)
+"run()" -> "run()": print_queue()
+Dram -> CPU: NoneDvsCpu, assign_cpu_frequency
+Dram -> MEM: assign_task, reassign_task
+CPU -> Dram: assign_memory(task, Memory.TYPE_DRAM)
+MEM -> Dram: reassign_cpu_frequency(task, self)
+"run()" -> Task: exec_task 태스크 수행 및 종료
+Task -> "run()": calc_priority()
+"run()" -> CPU:
+Task -> CPU: add_power_consumed_idle, active
+Task -> MEM: add_power_consumed_idle, active
+
+"run()" -> "run()": check_queued_tasks()
+"run()" -> "run()": check_wait_period_queue()
+
+"run()" -> Report: print_console()
+Report -> "main()": 결과 출력
+@enduml
+
