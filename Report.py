@@ -1,42 +1,27 @@
 class Report:
-    def __init__(self):
-        self.policy_name = None
-        self.power_consumed_avg = 0
-        self.utilization = None
-        self.power_consumed_cpu_avg = 0
-        self.power_consumed_mem_avg = 0
-        self.power_consumed_active_avg = 0
-        self.power_consumed_idle_avg = 0
-        self.sum_utils = 0
-        self.n_utils = 0
+    def __init__(self, system):
+        system.memories.calc_total_power_consumed()
 
-    def cleanup_report(self):
-        self.power_consumed_cpu_avg = 0
-        self.power_consumed_mem_avg = 0
-        self.power_consumed_active_avg = 0
-        self.power_consumed_idle_avg = 0
-        self.sum_utils = 0
-        self.n_utils = 0
-
-    def add_utilization(self, task_queue):
-        self.sum_utils += task_queue.get_tasks_ndet()
-        self.n_utils += 1
-
-    def make_report(self, system):
-        power_consumed_cpu = system.CPU.power_consumed_cpu_active + system.CPU.power_consumed_cpu_idle
-        power_consumed_mem = system.Memories.power_consumed_mem_active + system.Memories.power_consumed_mem_idle
-        power_consumed_active = system.CPU.power_consumed_cpu_active + system.Memories.power_consumed_mem_active
-        power_consumed_idle = system.CPU.power_consumed_cpu_idle + system.Memories.power_consumed_mem_idle
+        power_consumed_cpu = system.CPU.power_consumed_active + system.CPU.power_consumed_idle
+        power_consumed_mem = system.memories.total_power_consumed_active + system.memories.total_power_consumed_idle
+        power_consumed_active = system.CPU.power_consumed_active + system.memories.total_power_consumed_active
+        power_consumed_idle = system.CPU.power_consumed_idle + system.memories.total_power_consumed_idle
         power_consumed = power_consumed_cpu + power_consumed_mem
 
-        self.power_consumed_avg = float(power_consumed)/system.time
-        self.power_consumed_cpu_avg = float(power_consumed_cpu)/system.time
-        self.power_consumed_mem_avg = float(power_consumed_mem) / system.time
-        self.power_consumed_active_avg = float(power_consumed_active) / system.time
-        self.power_consumed_idle_avg = float(power_consumed_idle)/system.time
-        self.utilization = float(self.sum_utils)/self.n_utils*100
+        self.system = system
+        self.power_consumed_avg = power_consumed / system.time
+        self.power_consumed_cpu_avg = power_consumed_cpu / system.time
+        self.power_consumed_mem_avg = power_consumed_mem / system.time
+        self.power_consumed_active_avg = power_consumed_active / system.time
+        self.power_consumed_idle_avg = power_consumed_idle / system.time
+        self.utilization = float(system.sum_utils) / system.n_utils / system.CPU.n_core * 100
 
-    def print_result(self):
-        print("%10s %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf" %
-              (self.policy_name, self.power_consumed_avg, self.utilization, self.power_consumed_cpu_avg,
-               self.power_consumed_mem_avg, self.power_consumed_active_avg, self.power_consumed_idle_avg))
+    def print_console(self):
+        print(f'\nnum of core: {self.system.CPU.n_core}')
+        print(f'policy: {self.system.name}')
+        print(f'simulation time: {self.system.time}')
+        print(f'average power consumed: {round(self.power_consumed_avg, 3)}')
+        print(f'CPU + MEM power consumed: {round(self.power_consumed_cpu_avg, 3)} + {round(self.power_consumed_mem_avg, 3)}')
+        print(f'ACTIVE + IDLE power consumed: '
+              f'{round(self.power_consumed_active_avg, 3)} + {round(self.power_consumed_idle_avg, 3)}')
+        print(f'utilization: {round(self.utilization, 3)}%')
