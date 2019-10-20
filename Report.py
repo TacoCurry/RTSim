@@ -14,10 +14,11 @@ class Report:
         self.power_consumed_mem_avg = power_consumed_mem / system.time
         self.power_consumed_active_avg = power_consumed_active / system.time
         self.power_consumed_idle_avg = power_consumed_idle / system.time
-        self.utilization = float(system.sum_utils) / system.n_utils * 100
+        self.utilization = float(system.sum_utils) / system.n_utils / system.CPU.n_core * 100
 
     def print_console(self):
-        print(f'\npolicy: {self.system.name}')
+        print(f'\nnum of core: {self.system.CPU.n_core}')
+        print(f'policy: {self.system.name}')
         print(f'simulation time: {self.system.time}')
         print(f'average power consumed: {round(self.power_consumed_avg, 3)}')
         print(f'CPU + MEM power consumed: {round(self.power_consumed_cpu_avg, 3)} + {round(self.power_consumed_mem_avg, 3)}')

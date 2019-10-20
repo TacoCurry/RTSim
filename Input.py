@@ -7,7 +7,7 @@ class InputUtils:
     def set_processor(system, input_file="input_processor.txt"):
         try:
             with open(input_file, "r", encoding='UTF8') as f:
-                n_core = int(f.readline())
+                system.CPU.n_core = int(f.readline())
                 n_frequency = int(f.readline())
                 for i in range(n_frequency):
                     temp = f.readline().split()
@@ -36,7 +36,7 @@ class InputUtils:
                 n_task = int(f.readline())
                 for i in range(n_task):
                     temp = f.readline().split()
-                    system.tasks.append(Task(wcet=int(temp[0]), period=int(temp[1]),
+                    system.tasks.append(Task(no=i+1, wcet=int(temp[0]), period=int(temp[1]),
                                              mem_req=int(temp[2]), mem_active_ratio=float(temp[3]), cpu=system.CPU))
         except FileNotFoundError:
             system.error("task 정보 파일을 찾을 수 없습니다.")

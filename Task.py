@@ -1,14 +1,10 @@
 class Task:
-    n_task = 0
-
-    def __init__(self, wcet, period, mem_req, mem_active_ratio, cpu):
+    def __init__(self, no: int, wcet, period, mem_req, mem_active_ratio, cpu):
         self.wcet = wcet
         self.period = self.deadline = period
         self.memory_req = mem_req
         self.memory_active_ratio = mem_active_ratio
-
-        Task.n_task = Task.n_task + 1
-        self.no = Task.n_task
+        self.no = no
 
         self.cpu = cpu
         self.cpu_frequency = None
@@ -20,6 +16,7 @@ class Task:
         self.det_remain_old = None
 
         self.period_start = 0
+        self.prev_exec_time = None
 
     def __lt__(self, other):
         return self.no < other.no
@@ -69,7 +66,18 @@ class Task:
         if update_deadline:
             self.deadline -= 1
 
-    def exec_active(self, time: int):
+    def exec_active(self, time: int, system):
+        if not self.prev_exec_time:
+            pass
+        elif self.prev_exec_time != system.time - 1:
+            # 새로 수행되는 태스크일 때만 cpu와 메모리 다시 할당
+            system.reassign_task(self)
+
+        self.prev_exec_time = system.time
+        self.deadline -= time
+        self.det_remain -= time
+
+        # calc power
         wcet_scaled_cpu = 1 / self.cpu_frequency.wcet_scale
         wcet_scaled_mem = 1 / self.memory.wcet_scale
         wcet_scaled = wcet_scaled_cpu + wcet_scaled_mem
@@ -81,5 +89,8 @@ class Task:
         self.memory.add_power_consumed_idle(
             time * self.memory.power_idle * self.memory_req * (1 - self.memory_active_ratio))
 
-        self.deadline -= time
-        self.det_remain -= time
+        # print
+        if system.verbose != system.V_NO:
+            print(f'{system.time}부터 {system.time + 1}까지 task {self.no} 실행 '
+                  f'(cpu_freq:{self.cpu_frequency.wcet_scale}, '
+                  f'memory_type:{self.memory.get_type_str()})')
