@@ -1,135 +1,103 @@
-@startuml
+@startuml simulator
 
-/'Simulator'/
-
-class Simulator{
-    +{field} cur_simtime: int
-    +{field} end_simtime: int
-
-    +{method} load_setting(): bool
-    +{method} load_tasks(): bool 
-    +{method} start_sim(): void
-    +{method} print_result(): void
-}
-
-Simulator -> System
-
-/'<System>
-하나의 임베디드 시스템을 의미합니다.
-시스템은 CPU와 메모리 등으로 구성됩니다.
-'/
+/'<System>'/
 
 class System <<Abstract>>
 class System{
-    +{field}{abstract} name: String
+    +{field} name: String
+    +{field} desc: String
+    +{field} CPU: CPU
+    +{field} memories: Memories
+    +{field} time: int
+    +{field} end_sim_time: int
+    +{field} verbose: int
+    +{field} tasks: Task[]
+    +{field} wait_period_queue: Task[]
+    +{field} queue: Task[]
 
+    +{method} run(void): void
+    +{method} is_schedule(Task): bool
+    +{method} check_queued_tasks(): bool
     +{method}{abstract} assign_task(Task): bool
-    +{method}{abstract} assign_memory(Task): bool
-    +{method}{abstract} assign_cpu(Task): bool
+    +{method}{abstract} reassign_task(Task): bool
 }
 
-System o--- CPU
-System o--- Memory
-System o--- Queue
+System o- CPU
+System o- Memories
 System <|-- Sys_DRAM
-System <|-- Sys_DVS_DRAM
-System <|-- Sys_DVS_HM
+System <|-- Sys_DVFS_DRAM
+System <|-- Sys_DVFS_HM
 System <|-- Sys_HM
 
-class Sys_DRAM{
-
-}
-
-class Sys_HM{
-
-}
-
-class Sys_DVS_DRAM{
-
-}
-
-class Sys_DVS_HM{
-
-}
-
-
-/'<CPU>
-CPU는 프로세서이며 System의 구성요소입니다.
-CPU는 하나입니다. (싱글코어 환경이므로)
-'/
-
+/'<CPU>'/
 class CPU <<Abstract>>
 class CPU {
-    +{method}{abstract} cal_power_active(Task): double 
-    +{method}{abstract} cal_power_idle(int): double
-    +{method}{abstract} assign_cpu(Task): bool
+    +{field} n_core: int
+    +{field} frequencies: CpuFrequency[]
+    +{field} power_consumed_idle: float
+    +{field} power_consumed_active: float
+
+    +{method} insert_cpu_frequency(float, float, float): bool
+    +{method} assign_cpu_frequency(Task): bool
+    +{method} exec_idle(int): void
+    +{method}{abstract} reassign_cpu_frequency(Task): bool
 } 
 
-CPU <|-- nonDVS_CPU
-CPU <|-- DVS_CPU
+CPU <|--- nonDVFS_CPU
+CPU <|--- DVFS_CPU
+CPU o-- CpuFrequency
 
-class DVS_CPU{
-    +{field} n_cpufreq: int
-    +{field} cpufreq: double[]
-    +{field} power_active: double[]
-    +{field} power_idle: double[]
+class CpuFrequency{
+    +{field} wcet_scale: float
+    +{field} power_active: float
+    +{field} power_idle: float
 }
 
-class nonDVS_CPU{
-    +{field} power_active: double
-    +{field} power_idle: double
-}
+/'<Memory>'/
+class Memories{
+    +{field} list: Memory[]
+    +{field} total_power_consumed_active: float
+    +{field} total_power_consumed_idle: float
 
-/'<Memory>
-Memory는 System의 구성요소입니다.
-System은 한 개 혹은 여러개의 메모리를 가집니다.'/
+    +{method} insert_memory(): bool
+    +{method} assign_memory(Task, int): bool
+}
 
 class Memory <<Abstract>>
 class Memory{
+    +{field} type
     +{field} capacity: int
-    +{field} capacity_remain: int
+    +{field} used_capacity: int
     +{field} power_active: double
     +{field} power_idle: double
-    +{field} task_scale: double
-
-    +{method} cal_power_active(Task): double
-    +{method} cal_power_idle(int): double
-    +{method}{abstract} assign_memory(Task): bool
+    +{field} wcet_scale: double
 }
 
 Memory <|-- LPM
 Memory <|-- DRAM
+Memories o-- Memory
 
-class LPM{
-
-}
-
-class DRAM{
-
-}
-
-/'Queue'/
-class Queue{
-    +{field} length: int
-    
-    +{method} pop(): Task
-    +{method} insert(Task): void
-    +{method} requeue(): void
-}
-
-Queue o-- Task
 
 /'Task'/
-
 class Task{
-    +{static}{field} count: int
     +{field} no: int
     +{field} wcet: int
     +{field} period: int
-    +{field} memreq: int
-    +{field} assign_execution_time: int
-    +{field} assign_execution_time_remain: int
+    +{field} mem_req: int
+    +{field} cpu: CPU
+    +{field} cpu_frequency: CPUFrequency
+    +{field} memory: Memory
+    +{field} det: float
+    +{field} det_remain: float
+    +{field} period_start: int
+    +{field} prev_exec_time: int
 
+    +{method} calc_det(void): void
+    +{method} exec_idle(int): void
+    +{method} exec_active(int): void
 }
+
+System - Task
+
 
 @enduml
