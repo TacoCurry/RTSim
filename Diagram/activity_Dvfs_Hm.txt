@@ -1,0 +1,53 @@
+@startuml
+title DVFS_HM
+(*) --> "main()"
+-->[system == 6]" DvfsHm(end_sim_time, verbose).run()"
+note left: self.CPU = DVFSCPU()
+-->[객체 DvfsHm 생성 및 시뮬레이션 시작] " InputUtils.set_processor(self) "
+ note right: 메모리 입력: freq의 일률, active 전력소모량, idle 전력소모량
+ --> "InputUtils.set_memory(self)"
+ note right : 메모리 타입, 용량, 일률, active  전력소모량, idle  전력소모량
+ --> "InputUtils.set_tasks(self)"
+ note right: task의 개수, wcet, 주기, 메모리요구량, 메모리 활성율
+ --> [각 태스크 마다 실행]"self.setup_tasks()"
+ --> "assign_task(self, task)"
+ --> "self.CPU.assign_cpu_frequency(task)"
+ --> "self.memories.assign_memory(task, mem_type)"
+ --> "task.calc_det()"
+ note right: 메모리 및 cpu freq을 고려한 수행시간 결정
+ --> "is_schedule(self, task)"
+ note right: utilization U < 1 is satisfied
+ --> "self.push_queue(task)"
+
+ if "task.length == 0" then
+ -->"self.CPU.exec_idle(time=1)"
+ else
+--> "exec_task = self.pop_queue()"
+if "prev_exec_task != exec_task" then
+--> "self.reassign_task(exec_task)"
+endif
+--> " exec_task.exec_active(time=1)"
+--> " 나머지 태스크는 queue에서 대기"
+--> "우선순위에 따라 정렬"
+note right:  tup[1].exec_idle(time=1, update_deadline=False)
+
+--> "self.add_utilization()"
+note right: self.sum_utils += self.get_tasks_ndet()
+
+if "exec_task.det_remain == 0 " then
+--> "초기화" 
+note right: period_start, det_remain, deadline, prev_exec_time , push_wait_period_queue
+-->  "self.check_queued_tasks()"
+
+else 
+-->"self.push_queue(exec_task)"
+-->  "self.check_queued_tasks()"
+endif
+
+--> "time += 1"
+--> " self.check_wait_period_queue()"
+note left: 대기 queue 에서 queue로 태스크 이동
+-->"report.print_console()"
+note left: 결과 출력
+-->  (*)
+@enduml
