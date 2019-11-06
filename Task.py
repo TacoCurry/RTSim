@@ -26,7 +26,7 @@ class Task:
         return float(self.deadline)/self.det_remain
 
     def calc_det(self):
-        new_det = self.wcet / (self.cpu_frequency.wcet_scale * self.memory.wcet_scale)
+        new_det = self.wcet / min(self.cpu_frequency.wcet_scale, self.memory.wcet_scale)
 
         self.det_old = self.det
         self.det = int(round(new_det))
