@@ -40,3 +40,15 @@ class InputUtils:
                                              mem_req=int(temp[2]), mem_active_ratio=float(temp[3]), cpu=system.CPU))
         except FileNotFoundError:
             system.error("task 정보 파일을 찾을 수 없습니다.")
+
+    @staticmethod
+    def set_GA(system, input_file="GA_result.txt"):
+        try:
+            with open(input_file, "r", encoding='UTF8') as f:
+                n_task = len(system.tasks)
+                for i in range(n_task):
+                    temp = f.readline().split()
+                    system.assigned_CPU.append(int(temp[0]))
+                    system.assigned_MEM.append(int(temp[1]))
+        except FileNotFoundError:
+            system.error("GA 정보 파일을 찾을 수 없습니다.")
