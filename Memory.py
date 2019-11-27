@@ -96,3 +96,10 @@ class Memories:
         for memory in self.list:
             result += memory.power_consumed_idle
         return result
+
+    def check_memory(self):
+        # Check memory usage
+        for memory in self.list:
+            if memory.used_capacity > memory.capacity:
+                return False
+        return True
