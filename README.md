@@ -23,3 +23,6 @@ Real-time task simulator
 총 전력소모량, 프로세서 Utilization, CPU 전력소모량, 메모리 전력소모량, active 시 전력소모량, idle시 전력소모량 등이 콘솔로 출력된다.
 
 ## Demo
+RT Simulator Demo: DVFS_HM Policy 수행 결과 
+https://youtu.be/SBjRZtSTYgk
+
