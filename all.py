@@ -1,8 +1,18 @@
+from RTSim.System import Dram, Hm, DvfsDram, DvfsHm, GA
 from GA.inout import InputUtils, OutputUtils
 from GA.Solution import Solution
+from TaskGen.Input import InputUtils as tgInput
+from TaskGen.Generation import GenTask
 
 
-def run():
+def taskgen():
+    tgInput.set_memory()
+    tgInput.set_processor()
+    tgInput.set_tasks()
+    GenTask.gen_task(1)
+
+
+def ga_run():
     # from files
     Solution.memories = InputUtils.get_memories()
     Solution.processor = InputUtils.get_processor()
@@ -56,4 +66,24 @@ def run():
             break
 
 
-run()
+# Generate Task
+print("TaskGen 시작")
+taskgen()
+print("TaskGen 끝")
+
+# GA
+print("GA 시작")
+ga_run()
+print("GA 끝")
+
+# RTsim
+print("RTsim 시작")
+system = 6
+end_sim_time = 100000
+verbose = 0
+Dram(end_sim_time, verbose).run()
+Hm(end_sim_time, verbose).run()
+DvfsDram(end_sim_time, verbose).run()
+DvfsHm(end_sim_time, verbose).run()
+GA(end_sim_time, verbose).run()
+print("RTsim 끝")

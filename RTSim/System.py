@@ -36,6 +36,8 @@ class System(metaclass=ABCMeta):
         InputUtils.set_processor(self)
         InputUtils.set_memory(self)
         InputUtils.set_tasks(self)
+        if self.__class__.__name__ == "DvfsDram" or self.__class__.__name__=="Dram":
+            self.memories.list[0].capacity = self.memories.total_capacity
         self.setup_tasks()
 
         # Run simulator...
