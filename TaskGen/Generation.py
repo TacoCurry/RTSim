@@ -21,14 +21,14 @@ class GenTask:
         global memreq_1task
         memreq_1task = Variables.total_mem_usage / Variables.n_tasks
 
-        print("=======================================================")
-
-        print(f'util_cpu_1task:{format(util_cpu_1task, ".6f")}')
-        print(f'util_mem_1task: {format(util_mem_1task, ".6f")}')
-        # print(f'get_mem_util(): {format(GenTask.get_mem_util(),".6f")}')
-        print(f'memreq_1task: {format(memreq_1task, ".0f")}')
-
-        print("=======================================================")
+        # print("=======================================================")
+        #
+        # print(f'util_cpu_1task:{format(util_cpu_1task, ".6f")}')
+        # print(f'util_mem_1task: {format(util_mem_1task, ".6f")}')
+        # # print(f'get_mem_util(): {format(GenTask.get_mem_util(),".6f")}')
+        # print(f'memreq_1task: {format(memreq_1task, ".0f")}')
+        #
+        # print("=======================================================")
 
         try:
             with open("task_generated.txt", "w", encoding='UTF8') as f:

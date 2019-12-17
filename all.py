@@ -66,24 +66,27 @@ def ga_run():
             break
 
 
-# Generate Task
-print("TaskGen 시작")
-taskgen()
-print("TaskGen 끝")
+num = int(input("몇 번 반복?: "))
+for i in range(num):
+    print("==================================")
+    print("# {}회".format(i+1))
 
-# GA
-print("GA 시작")
-ga_run()
-print("GA 끝")
+    # Generate Task
+    print("\n1.TaskGen")
+    taskgen()
 
-# RTsim
-print("RTsim 시작")
-system = 6
-end_sim_time = 100000
-verbose = 0
-Dram(end_sim_time, verbose).run()
-Hm(end_sim_time, verbose).run()
-DvfsDram(end_sim_time, verbose).run()
-DvfsHm(end_sim_time, verbose).run()
-GA(end_sim_time, verbose).run()
-print("RTsim 끝")
+    # GA
+    print("\n2.GA")
+    ga_run()
+
+    # RTsim
+    print("\n3.RTsim")
+    system = 6
+    end_sim_time = 10000
+    verbose = 0
+    Dram(end_sim_time, verbose).run()
+    Hm(end_sim_time, verbose).run()
+    DvfsDram(end_sim_time, verbose).run()
+    DvfsHm(end_sim_time, verbose).run()
+    GA(end_sim_time, verbose).run()
+    print("==================================")

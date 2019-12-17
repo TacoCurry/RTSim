@@ -19,11 +19,11 @@ class InputUtils:
         except FileNotFoundError:
             ErrorMsg.error("task 정보 파일을 찾을 수 없습니다.")
 
-        print("=======================================================")
-        print("This is the memory Input")
-        print("type capacity, wcet_scale, power_active, power_idle")
-        print(mem1.mem_type, mem1.capacity, mem1.wcet_scale, mem1.power_active, mem1.power_idle)
-        print(mem2.mem_type, mem2.capacity, mem2.wcet_scale, mem2.power_active, mem2.power_idle)
+        # print("=======================================================")
+        # print("This is the memory Input")
+        # print("type capacity, wcet_scale, power_active, power_idle")
+        # print(mem1.mem_type, mem1.capacity, mem1.wcet_scale, mem1.power_active, mem1.power_idle)
+        # print(mem2.mem_type, mem2.capacity, mem2.wcet_scale, mem2.power_active, mem2.power_idle)
 
         Memories.mem_list.append(mem1)
         Memories.mem_list.append(mem2)
@@ -40,15 +40,15 @@ class InputUtils:
                 Variables.mem_total = int(temp[2])
                 Variables.util_cpu = float(temp[3]) * Variables.n_cores
                 Variables.total_mem_usage = int(temp[4])
-                print("=======================================================")
-                print("This is the Task Generation Input")
-
-                print("n_cores  n_tasks")
-                print(Variables.n_cores, Variables.n_tasks)
-
-                print("wcet_min, wcet_max, mem_total, util_cpu, util_target")
-                print(Variables.wcet_min, Variables.wcet_max, Variables.mem_total, Variables.util_cpu,
-                      Variables.total_mem_usage)
+                # print("=======================================================")
+                # print("This is the Task Generation Input")
+                #
+                # print("n_cores  n_tasks")
+                # print(Variables.n_cores, Variables.n_tasks)
+                #
+                # print("wcet_min, wcet_max, mem_total, util_cpu, util_target")
+                # print(Variables.wcet_min, Variables.wcet_max, Variables.mem_total, Variables.util_cpu,
+                #       Variables.total_mem_usage)
 
         except FileNotFoundError:
             ErrorMsg.error("task 정보 파일을 찾을 수 없습니다.")
