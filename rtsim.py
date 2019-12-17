@@ -1,4 +1,4 @@
-from System import Dram, Hm, DvfsDram, DvfsHm, GA
+from RTSim.System import Dram, Hm, DvfsDram, DvfsHm, GA
 
 system = int(input("[1]DRAM, [2]HM, [3]DVFS_DRAM, [4]DVFS_HM, [5]FIXED(GA), [6]ALL: "))
 end_sim_time = int(input("시뮬레이션 시간: "))
@@ -20,6 +20,4 @@ elif system == 6:
     DvfsDram(end_sim_time, verbose).run()
     DvfsHm(end_sim_time, verbose).run()
     GA(end_sim_time, verbose).run()
-
-
 

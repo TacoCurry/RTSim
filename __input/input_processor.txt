@@ -1,0 +1,11 @@
+2
+4
+1     100    80
+0.5   17.9  14.3
+0.25  3.2  2.6
+0.125 0.6  0.4
+
+# 코어의 개수
+# voltage/frequency mode 개수
+# 각 모드 별 wcet_scale power_active power_idle
+# 모드는 꼭 scale에 대해 내림차순으로 나열되어야 함

@@ -1,10 +1,10 @@
 from abc import *
-from CPU import NoneDVFSCPU, DVFSCPU
-from Memory import Memory
+from RTSim.CPU import NoneDVFSCPU, DVFSCPU
+from RTSim.Memory import Memory
 import heapq
 import sys
-from Input import InputUtils
-from Report import Report
+from RTSim.Input import InputUtils
+from RTSim.Report import Report
 
 
 class System(metaclass=ABCMeta):

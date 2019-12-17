@@ -1,0 +1,18 @@
+100000
+100
+1000
+0.2
+1
+0.001
+4
+100 0
+
+# 첫 번째 줄부터 순서대로
+# Max Generations
+# populations
+# TRY_LIMIT
+# UTIL_LIMIT_RATIO (높을수록 해의 자유도가 증가하지만, util이 스케줄 가능 여부를 초과하는 해가 나올 가능성이 존재)
+# PENALTY_RATIO
+# MUTATION_PROB, 돌연변이 발생 확률(%)
+# Roulette-wheel selection 에서 사용하는 상수 k
+# ranking selection 에서 사용하는 MAX, MIN

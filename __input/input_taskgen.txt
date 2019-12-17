@@ -1,0 +1,8 @@
+100
+1 30 2000 0.25 1000
+
+# n_tasks
+# wcet_min wcet_max mem_total util_cpu total_memory_usage
+
+# 태스크의 수
+# 최소 수행시간, 최대 수행시간, 메모리 총 용량

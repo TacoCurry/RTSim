@@ -1,10 +1,10 @@
-from Memory import Memories
-from Task import Task
+from RTSim.Memory import Memories
+from RTSim.Task import Task
 
 
 class InputUtils:
     @staticmethod
-    def set_processor(system, input_file="input_processor.txt"):
+    def set_processor(system, input_file="__input/input_processor.txt"):
         try:
             with open(input_file, "r", encoding='UTF8') as f:
                 system.CPU.n_core = int(f.readline())
@@ -17,7 +17,7 @@ class InputUtils:
             system.error("processor 설정 파일을 찾을 수 없습니다.")
 
     @staticmethod
-    def set_memory(system, input_file="input_mem.txt"):
+    def set_memory(system, input_file="__input/input_mem.txt"):
         try:
             system.memories = Memories()
             with open(input_file, "r", encoding='UTF8') as f:
@@ -29,7 +29,7 @@ class InputUtils:
             system.error("memory 정보 파일을 찾을 수 없습니다.")
 
     @staticmethod
-    def set_tasks(system, input_file="input_tasks.txt"):
+    def set_tasks(system, input_file="task_generated.txt"):
         # 일단 tasks 에 순서대로 담기
         try:
             with open(input_file, "r", encoding='UTF8') as f:
@@ -42,7 +42,7 @@ class InputUtils:
             system.error("task 정보 파일을 찾을 수 없습니다.")
 
     @staticmethod
-    def set_GA(system, input_file="GA_result.txt"):
+    def set_GA(system, input_file="ga_result.txt"):
         try:
             with open(input_file, "r", encoding='UTF8') as f:
                 n_task = len(system.tasks)
